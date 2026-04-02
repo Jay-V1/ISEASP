@@ -1,0 +1,496 @@
+<?php
+require_once("../../include/initialize.php");
+if (!isset($_SESSION['ADMIN_USERID'])) {
+    redirect(web_root . "admin/index.php");
+}
+
+global $mydb;
+
+$action = (isset($_GET['action']) && $_GET['action'] != '') ? $_GET['action'] : '';
+
+switch ($action) {
+    // Existing actions
+    case 'delete':
+        doDelete();
+        break;
+    case 'terminate':
+        doTerminate();
+        break;
+    case 'graduate':
+        doGraduate();
+        break;
+    
+    // Payroll actions
+    case 'generate_payroll':
+        generatePayroll();
+        break;
+    case 'approve_payroll':
+        approvePayroll();
+        break;
+    case 'disburse_payroll':
+        disbursePayroll();
+        break;
+    case 'mark_stipend_paid':
+        markStipendPaid();
+        break;
+    case 'renew_scholar':
+        renewScholar();
+        break;
+    case 'renew_multiple':
+        renewMultipleScholars();
+        break;
+    
+    default:
+        redirect(web_root . "admin/scholars/");
+}
+
+// Log function for all actions
+function logActivity($action, $details, $applicant_id = null) {
+    global $mydb;
+    
+    // Get user details
+    $mydb->setQuery("SELECT USERNAME, ROLE FROM tblusers WHERE USERID = " . $_SESSION['ADMIN_USERID']);
+    $mydb->executeQuery();
+    $user = $mydb->loadSingleResult();
+    
+    $log_sql = "INSERT INTO tbl_application_log 
+                (APPLICANTID, USERID, USERNAME, USER_ROLE, ACTION, ACTION_TYPE, DETAILS, LOG_DATE)
+                VALUES (
+                    " . ($applicant_id ? $applicant_id : 'NULL') . ", 
+                    " . $_SESSION['ADMIN_USERID'] . ", 
+                    '" . addslashes($user->USERNAME) . "', 
+                    '" . addslashes($user->ROLE) . "', 
+                    '" . addslashes($action) . "',
+                    'PAYROLL',
+                    '" . addslashes($details) . "',
+                    NOW()
+                )";
+    
+    $mydb->setQuery($log_sql);
+    $mydb->executeQuery();
+}
+
+// Existing functions
+function doDelete() {
+    global $mydb;
+    
+    if (isset($_GET['id']) && $_SESSION['ADMIN_ROLE'] == 'Super Admin') {
+        $award_id = intval($_GET['id']);
+        
+        // Get applicant ID before deleting
+        $mydb->setQuery("SELECT APPLICANTID FROM tbl_scholarship_awards WHERE AWARD_ID = $award_id");
+        $mydb->executeQuery();
+        $result = $mydb->loadSingleResult();
+        $applicant_id = $result->APPLICANTID;
+        
+        // Get scholar name for logging
+        $mydb->setQuery("SELECT CONCAT(LASTNAME, ', ', FIRSTNAME, ' ', IFNULL(MIDDLENAME, '')) as FULLNAME FROM tbl_applicants WHERE APPLICANTID = $applicant_id");
+        $mydb->executeQuery();
+        $scholar = $mydb->loadSingleResult();
+        
+        // Delete scholarship award
+        $sql = "DELETE FROM tbl_scholarship_awards WHERE AWARD_ID = $award_id";
+        $mydb->setQuery($sql);
+        $mydb->executeQuery();
+        
+        // Update applicant status back to Qualified
+        $update_sql = "UPDATE tbl_applicants SET STATUS = 'Qualified' WHERE APPLICANTID = $applicant_id";
+        $mydb->setQuery($update_sql);
+        $mydb->executeQuery();
+        
+        // Log the action
+        logActivity("Deleted Scholarship Award", "Deleted scholarship award for scholar: " . ($scholar ? $scholar->FULLNAME : "ID: $applicant_id"), $applicant_id);
+        
+        message("Scholarship award deleted successfully!", "success");
+        redirect("index.php");
+    } else {
+        message("Access denied!", "error");
+        redirect("index.php");
+    }
+}
+
+function doTerminate() {
+    global $mydb;
+    
+    if (isset($_POST['id'])) {
+        $award_id = intval($_POST['id']);
+        $reason = trim($_POST['reason']);
+        
+        // Get applicant ID
+        $mydb->setQuery("SELECT APPLICANTID FROM tbl_scholarship_awards WHERE AWARD_ID = $award_id");
+        $mydb->executeQuery();
+        $result = $mydb->loadSingleResult();
+        $applicant_id = $result->APPLICANTID;
+        
+        // Get scholar name for logging
+        $mydb->setQuery("SELECT CONCAT(LASTNAME, ', ', FIRSTNAME, ' ', IFNULL(MIDDLENAME, '')) as FULLNAME FROM tbl_applicants WHERE APPLICANTID = $applicant_id");
+        $mydb->executeQuery();
+        $scholar = $mydb->loadSingleResult();
+        
+        // Update award status
+        $sql = "UPDATE tbl_scholarship_awards SET 
+                STATUS = 'Terminated',
+                REMARKS = CONCAT(IFNULL(REMARKS, ''), ' | TERMINATED: $reason')
+                WHERE AWARD_ID = $award_id";
+        
+        $mydb->setQuery($sql);
+        $mydb->executeQuery();
+        
+        // Update applicant status
+        $update_sql = "UPDATE tbl_applicants SET STATUS = 'Rejected' WHERE APPLICANTID = $applicant_id";
+        $mydb->setQuery($update_sql);
+        $mydb->executeQuery();
+        
+        // Add to history
+        $history_sql = "INSERT INTO tbl_scholarship_history 
+                        (APPLICANTID, SCHOOL_YEAR, SEMESTER, STATUS, GPA, REMARKS, UPDATED_BY)
+                        SELECT 
+                            $applicant_id,
+                            SCHOOL_YEAR,
+                            SEMESTER,
+                            'Terminated',
+                            GPA,
+                            '$reason',
+                            " . $_SESSION['ADMIN_USERID'] . "
+                        FROM tbl_scholarship_awards 
+                        WHERE AWARD_ID = $award_id";
+        
+        $mydb->setQuery($history_sql);
+        $mydb->executeQuery();
+        
+        // Log the action
+        logActivity("Terminated Scholarship", "Terminated scholarship for scholar: " . ($scholar ? $scholar->FULLNAME : "ID: $applicant_id") . ". Reason: $reason", $applicant_id);
+        
+        echo json_encode(['status' => 'success']);
+        exit;
+    }
+}
+
+function doGraduate() {
+    global $mydb;
+    
+    if (isset($_POST['id'])) {
+        $award_id = intval($_POST['id']);
+        $final_gpa = floatval($_POST['final_gpa']);
+        
+        // Get applicant ID
+        $mydb->setQuery("SELECT APPLICANTID FROM tbl_scholarship_awards WHERE AWARD_ID = $award_id");
+        $mydb->executeQuery();
+        $result = $mydb->loadSingleResult();
+        $applicant_id = $result->APPLICANTID;
+        
+        // Get scholar name for logging
+        $mydb->setQuery("SELECT CONCAT(LASTNAME, ', ', FIRSTNAME, ' ', IFNULL(MIDDLENAME, '')) as FULLNAME FROM tbl_applicants WHERE APPLICANTID = $applicant_id");
+        $mydb->executeQuery();
+        $scholar = $mydb->loadSingleResult();
+        
+        // Update award status
+        $sql = "UPDATE tbl_scholarship_awards SET STATUS = 'Graduated' WHERE AWARD_ID = $award_id";
+        $mydb->setQuery($sql);
+        $mydb->executeQuery();
+        
+        // Update applicant status and GPA
+        $update_sql = "UPDATE tbl_applicants SET STATUS = 'Graduated', GPA = $final_gpa WHERE APPLICANTID = $applicant_id";
+        $mydb->setQuery($update_sql);
+        $mydb->executeQuery();
+        
+        // Add to history
+        $history_sql = "INSERT INTO tbl_scholarship_history 
+                        (APPLICANTID, SCHOOL_YEAR, SEMESTER, STATUS, GPA, REMARKS, UPDATED_BY)
+                        SELECT 
+                            $applicant_id,
+                            SCHOOL_YEAR,
+                            SEMESTER,
+                            'Graduated',
+                            $final_gpa,
+                            'Successfully graduated',
+                            " . $_SESSION['ADMIN_USERID'] . "
+                        FROM tbl_scholarship_awards 
+                        WHERE AWARD_ID = $award_id";
+        
+        $mydb->setQuery($history_sql);
+        $mydb->executeQuery();
+        
+        // Log the action
+        logActivity("Graduated Scholar", "Scholar graduated: " . ($scholar ? $scholar->FULLNAME : "ID: $applicant_id") . " with GPA: $final_gpa%", $applicant_id);
+        
+        echo json_encode(['status' => 'success']);
+        exit;
+    }
+}
+
+// Payroll Functions
+function generatePayroll() {
+    global $mydb;
+    
+    $payment_date = $_POST['payment_date'];
+    $school_year_id = $_POST['school_year_id'];
+    $semester = $_POST['semester'];
+    $stipend_amount = $_POST['stipend_amount'];
+    $remarks = $_POST['remarks'];
+    
+    // Check if payroll already exists for this school year and semester
+    $mydb->setQuery("SELECT id FROM tbl_payroll WHERE school_year_id = '$school_year_id' AND semester = '$semester'");
+    $mydb->executeQuery();
+    $result = $mydb->loadSingleResult();
+    if($result) {
+        message("Payroll for this semester already exists!", "error");
+        redirect(web_root . "admin/scholars/index.php?view=payroll");
+        return;
+    }
+    
+    // Get all approved renewals for this school year
+    $mydb->setQuery("
+        SELECT sr.scholar_id, sa.AMOUNT as monthly_stipend 
+        FROM tbl_scholar_renewals sr
+        LEFT JOIN tbl_scholarship_awards sa ON sr.scholar_id = sa.APPLICANTID AND sa.STATUS = 'Active'
+        WHERE sr.school_year_id = '$school_year_id' AND sr.status = 'approved'
+    ");
+    $mydb->executeQuery();
+    $renewals = $mydb->loadResultList();
+    
+    if(!$renewals || count($renewals) == 0) {
+        message("No renewed scholars found for this school year!", "error");
+        redirect(web_root . "admin/scholars/index.php?view=payroll");
+        return;
+    }
+    
+    $total_amount = 0;
+    $scholar_list = [];
+    
+    foreach($renewals as $renewal) {
+        $scholar_stipend = ($renewal->monthly_stipend && $renewal->monthly_stipend > 0) ? $renewal->monthly_stipend : $stipend_amount;
+        $scholar_list[] = [
+            'scholar_id' => $renewal->scholar_id,
+            'amount' => $scholar_stipend
+        ];
+        $total_amount += $scholar_stipend;
+    }
+    
+    // Create payroll record
+    $mydb->setQuery("
+        INSERT INTO tbl_payroll (payment_date, school_year_id, semester, total_amount, remarks, status, created_at, created_by) 
+        VALUES ('$payment_date', '$school_year_id', '$semester', '$total_amount', '$remarks', 'pending', NOW(), '{$_SESSION['ADMIN_USERID']}')
+    ");
+    $mydb->executeQuery();
+    $payroll_id = $mydb->insert_id();
+    
+    // Get school year name for logging
+    $mydb->setQuery("SELECT school_year FROM tbl_school_years WHERE id = '$school_year_id'");
+    $mydb->executeQuery();
+    $sy = $mydb->loadSingleResult();
+    
+    // Add payroll details for each scholar
+    foreach($scholar_list as $scholar) {
+        $mydb->setQuery("
+            INSERT INTO tbl_payroll_details (payroll_id, scholar_id, amount, payment_status) 
+            VALUES ('$payroll_id', '{$scholar['scholar_id']}', '{$scholar['amount']}', 'pending')
+        ");
+        $mydb->executeQuery();
+    }
+    
+    // Log activity
+    logActivity("Generated Payroll", "Generated payroll for $semester, " . date('F d, Y', strtotime($payment_date)) . " with " . count($scholar_list) . " scholars for " . ($sy ? $sy->school_year : "School Year ID: $school_year_id"));
+    
+    message("Payroll generated successfully for $semester with " . count($scholar_list) . " renewed scholars!", "success");
+    redirect(web_root . "admin/scholars/index.php?view=payroll");
+}
+
+function approvePayroll() {
+    global $mydb;
+    
+    $id = isset($_GET['id']) ? intval($_GET['id']) : 0;
+    
+    // Get payroll details before update for logging
+    $mydb->setQuery("
+        SELECT p.*, sy.school_year 
+        FROM tbl_payroll p
+        LEFT JOIN tbl_school_years sy ON p.school_year_id = sy.id
+        WHERE p.id = $id
+    ");
+    $mydb->executeQuery();
+    $payroll = $mydb->loadSingleResult();
+    
+    $mydb->setQuery("
+        UPDATE tbl_payroll 
+        SET status = 'approved', approved_by = '{$_SESSION['ADMIN_USERID']}', approved_date = NOW() 
+        WHERE id = $id
+    ");
+    $mydb->executeQuery();
+    
+    // Log activity
+    logActivity("Approved Payroll", "Approved payroll for " . ($payroll ? $payroll->semester . ", " . date('F Y', strtotime($payroll->payment_date)) . " for " . $payroll->school_year : "ID: $id"));
+    
+    message("Payroll approved successfully!", "success");
+    redirect(web_root . "admin/scholars/index.php?view=payroll");
+}
+
+function disbursePayroll() {
+    global $mydb;
+    
+    $id = isset($_GET['id']) ? intval($_GET['id']) : 0;
+    $reference_no = isset($_POST['reference_no']) ? $_POST['reference_no'] : 'PAY-' . date('Ymd') . '-' . $id;
+    
+    // Get payroll details before update for logging
+    $mydb->setQuery("
+        SELECT p.*, sy.school_year 
+        FROM tbl_payroll p
+        LEFT JOIN tbl_school_years sy ON p.school_year_id = sy.id
+        WHERE p.id = $id
+    ");
+    $mydb->executeQuery();
+    $payroll = $mydb->loadSingleResult();
+    
+    $mydb->setQuery("
+        UPDATE tbl_payroll 
+        SET status = 'disbursed', disbursed_by = '{$_SESSION['ADMIN_USERID']}', 
+            disbursement_date = NOW(), reference_no = '$reference_no' 
+        WHERE id = $id
+    ");
+    $mydb->executeQuery();
+    
+    // Log activity
+    logActivity("Disbursed Payroll", "Disbursed payroll with reference: $reference_no for " . ($payroll ? $payroll->semester . ", " . date('F Y', strtotime($payroll->payment_date)) . " for " . $payroll->school_year : "ID: $id") . ". Total amount: ₱" . number_format($payroll->total_amount, 2));
+    
+    message("Payroll disbursed successfully!", "success");
+    redirect(web_root . "admin/scholars/index.php?view=payroll");
+}
+
+function markStipendPaid() {
+    global $mydb;
+    
+    $detail_id = isset($_GET['detail_id']) ? intval($_GET['detail_id']) : 0;
+    $payroll_id = isset($_GET['payroll_id']) ? intval($_GET['payroll_id']) : 0;
+    
+    // Get scholar details before update for logging
+    $mydb->setQuery("
+        SELECT pd.*, 
+               CONCAT(a.LASTNAME, ', ', a.FIRSTNAME, ' ', IFNULL(a.MIDDLENAME, '')) as FULLNAME,
+               a.APPLICANTID
+        FROM tbl_payroll_details pd
+        INNER JOIN tbl_applicants a ON pd.scholar_id = a.APPLICANTID
+        WHERE pd.id = $detail_id
+    ");
+    $mydb->executeQuery();
+    $detail = $mydb->loadSingleResult();
+    
+    $mydb->setQuery("
+        UPDATE tbl_payroll_details 
+        SET payment_status = 'paid', payment_date = NOW() 
+        WHERE id = $detail_id
+    ");
+    $mydb->executeQuery();
+    
+    // Log activity
+    if($detail) {
+        logActivity("Marked Stipend Paid", "Marked stipend as paid for scholar: " . $detail->FULLNAME . " - Amount: ₱" . number_format($detail->amount, 2), $detail->APPLICANTID);
+    } else {
+        logActivity("Marked Stipend Paid", "Marked stipend as paid for detail ID: $detail_id");
+    }
+    
+    message("Stipend marked as paid!", "success");
+    redirect(web_root . "admin/scholars/index.php?view=payroll_details&id=$payroll_id");
+}
+
+function renewScholar() {
+    global $mydb;
+    
+    $scholar_id = isset($_GET['scholar_id']) ? intval($_GET['scholar_id']) : 0;
+    $school_year_id = isset($_GET['school_year_id']) ? intval($_GET['school_year_id']) : 0;
+    
+    // Get scholar details for logging
+    $mydb->setQuery("SELECT CONCAT(LASTNAME, ', ', FIRSTNAME, ' ', IFNULL(MIDDLENAME, '')) as FULLNAME FROM tbl_applicants WHERE APPLICANTID = $scholar_id");
+    $mydb->executeQuery();
+    $scholar = $mydb->loadSingleResult();
+    
+    // Check if already renewed
+    $mydb->setQuery("SELECT id FROM tbl_scholar_renewals WHERE scholar_id = '$scholar_id' AND school_year_id = '$school_year_id'");
+    $mydb->executeQuery();
+    $result = $mydb->loadSingleResult();
+    
+    if($result) {
+        // Update existing
+        $mydb->setQuery("
+            UPDATE tbl_scholar_renewals 
+            SET status = 'approved', approved_by = '{$_SESSION['ADMIN_USERID']}', approved_date = NOW() 
+            WHERE scholar_id = '$scholar_id' AND school_year_id = '$school_year_id'
+        ");
+    } else {
+        // Insert new
+        $mydb->setQuery("
+            INSERT INTO tbl_scholar_renewals (scholar_id, school_year_id, status, approved_by, approved_date) 
+            VALUES ('$scholar_id', '$school_year_id', 'approved', '{$_SESSION['ADMIN_USERID']}', NOW())
+        ");
+    }
+    $mydb->executeQuery();
+    
+    // Get school year name for logging
+    $mydb->setQuery("SELECT school_year FROM tbl_school_years WHERE id = $school_year_id");
+    $mydb->executeQuery();
+    $sy = $mydb->loadSingleResult();
+    
+    // Log activity
+    logActivity("Renewed Scholar", "Renewed scholar: " . ($scholar ? $scholar->FULLNAME : "ID: $scholar_id") . " for school year: " . ($sy ? $sy->school_year : "ID: $school_year_id"), $scholar_id);
+    
+    message("Scholar renewed successfully!", "success");
+    redirect(web_root . "admin/scholars/index.php?view=view&id=$scholar_id");
+}
+
+function renewMultipleScholars() {
+    global $mydb;
+    
+    $scholar_ids = isset($_POST['scholar_ids']) ? $_POST['scholar_ids'] : [];
+    $school_year_id = isset($_POST['school_year_id']) ? intval($_POST['school_year_id']) : 0;
+    
+    if(!is_array($scholar_ids) || count($scholar_ids) == 0) {
+        echo json_encode(['success' => false, 'message' => 'No scholars selected']);
+        return;
+    }
+    
+    $success_count = 0;
+    $scholar_names = [];
+    
+    foreach($scholar_ids as $scholar_id) {
+        // Get scholar name for logging
+        $mydb->setQuery("SELECT CONCAT(LASTNAME, ', ', FIRSTNAME, ' ', IFNULL(MIDDLENAME, '')) as FULLNAME FROM tbl_applicants WHERE APPLICANTID = $scholar_id");
+        $mydb->executeQuery();
+        $scholar = $mydb->loadSingleResult();
+        if($scholar) {
+            $scholar_names[] = $scholar->FULLNAME;
+        }
+        
+        $mydb->setQuery("SELECT id FROM tbl_scholar_renewals WHERE scholar_id = '$scholar_id' AND school_year_id = '$school_year_id'");
+        $mydb->executeQuery();
+        $result = $mydb->loadSingleResult();
+        
+        if($result) {
+            $mydb->setQuery("
+                UPDATE tbl_scholar_renewals 
+                SET status = 'approved', approved_by = '{$_SESSION['ADMIN_USERID']}', approved_date = NOW() 
+                WHERE scholar_id = '$scholar_id' AND school_year_id = '$school_year_id'
+            ");
+        } else {
+            $mydb->setQuery("
+                INSERT INTO tbl_scholar_renewals (scholar_id, school_year_id, status, approved_by, approved_date) 
+                VALUES ('$scholar_id', '$school_year_id', 'approved', '{$_SESSION['ADMIN_USERID']}', NOW())
+            ");
+        }
+        $mydb->executeQuery();
+        $success_count++;
+    }
+    
+    // Get school year name for logging
+    $mydb->setQuery("SELECT school_year FROM tbl_school_years WHERE id = $school_year_id");
+    $mydb->executeQuery();
+    $sy = $mydb->loadSingleResult();
+    
+    // Log activity
+    $names_list = implode(", ", array_slice($scholar_names, 0, 5));
+    if(count($scholar_names) > 5) {
+        $names_list .= " and " . (count($scholar_names) - 5) . " more";
+    }
+    logActivity("Bulk Renewal", "Renewed $success_count scholars for school year " . ($sy ? $sy->school_year : "ID: $school_year_id") . ". Scholars: $names_list");
+    
+    echo json_encode(['success' => true, 'count' => $success_count]);
+}
+?>

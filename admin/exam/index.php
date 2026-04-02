@@ -1,0 +1,38 @@
+<?php
+require_once("../../include/initialize.php");
+if (!isset($_SESSION['ADMIN_USERID'])) {
+    redirect(web_root . "admin/index.php");
+}
+
+$view = (isset($_GET['view']) && $_GET['view'] != '') ? $_GET['view'] : '';
+$title = "Examination";
+$subtitle = "";
+
+switch ($view) {
+    case 'schedule':
+        $content = 'schedule.php';
+        $subtitle = 'Exam Schedule';
+        break;
+    case 'results':
+        $content = 'results.php';
+        $subtitle = 'Exam Results';
+        break;
+    case 'add':
+        $content = 'add_result.php';
+        $subtitle = 'Add Exam Result';
+        break;
+    case 'edit':
+        $content = 'edit_result.php';
+        $subtitle = 'Edit Exam Result';
+        break;
+    case 'view':
+        $content = 'view.php';
+        $subtitle = 'Exam Details';
+        break;
+    default:
+        $content = 'schedule.php';
+        $subtitle = 'Exam Schedule';
+}
+
+require_once("../theme/templates.php");
+?>
