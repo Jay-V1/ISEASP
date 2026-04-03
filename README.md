@@ -82,4 +82,4 @@ ISEASP is a web-based scholarship management system designed to automate and str
 2. **Clone or Download Project**
    ```bash
    cd C:\xampp\htdocs\
-   git clone [repository-url] ISEASP1
+   git clone https://github.com/Jay-V1/ISEASP.git ISEASP
