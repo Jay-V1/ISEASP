@@ -281,7 +281,7 @@
                         </a>
                         <ul class="treeview-menu">
                             <li><a href="<?php echo web_root;?>admin/evaluation/"><i class="fa fa-circle-o"></i> For Evaluation</a></li>
-                            <li><a href="<?php echo web_root;?>admin/evaluation/index.php?view=qualified"><i class="fa fa-circle-o"></i> Qualified</a></li>
+                            <!-- <li><a href="<?php echo web_root;?>admin/evaluation/index.php?view=qualified"><i class="fa fa-circle-o"></i> Qualified</a></li> -->
                         </ul>
                     </li>
 

@@ -189,7 +189,7 @@ global $mydb;
                                 <th>Municipality</th>
                                 <th>School</th>
                                 <th>Course</th>
-                                <th>Evaluation Date</th>
+                                <!-- <th>Evaluation Date</th> -->
                                 <th>Action</th>
                             </tr>
                         </thead>
@@ -213,7 +213,7 @@ global $mydb;
                                 <td><?= htmlspecialchars($q->MUNICIPALITY ?? 'N/A') ?></td>
                                 <td><?= htmlspecialchars($q->SCHOOL ?? 'N/A') ?></td>
                                 <td><?= htmlspecialchars($q->COURSE ?? 'N/A') ?></td>
-                                <td><?= $q->EVALUATION_DATE ? date('M d, Y', strtotime($q->EVALUATION_DATE)) : 'N/A' ?></td>
+                                <!-- <td><?= $q->EVALUATION_DATE ? date('M d, Y', strtotime($q->EVALUATION_DATE)) : 'N/A' ?></td> -->
                                 <td>
                                     <a href="../applications/index.php?view=convert&id=<?= $q->APPLICANTID ?>" class="btn btn-success btn-xs">
                                         <i class="fa fa-graduation-cap"></i> Convert
