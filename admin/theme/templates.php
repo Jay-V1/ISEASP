@@ -296,7 +296,7 @@
                         <ul class="treeview-menu">
                             <li><a href="<?php echo web_root;?>admin/scholars/index.php?view=list"><i class="fa fa-users"></i> Active Scholars</a></li>
                             <li><a href="<?php echo web_root;?>admin/scholars/index.php?view=history"><i class="fa fa-history"></i> Scholarship History</a></li>
-                            <li><a href="<?php echo web_root;?>admin/scholars/index.php?view=graduate_form.php"><i class="fa fa-trophy"></i> Graduates</a></li>
+                            <li><a href="<?php echo web_root;?>admin/scholars/index.php?view=graduates"><i class="fa fa-trophy"></i> Graduates</a></li>
                             <li class="divider"></li>
                             <li><a href="<?php echo web_root;?>admin/scholars/index.php?view=payroll"><i class="fa fa-money"></i> Payroll Management</a></li>
                             <li><a href="<?php echo web_root;?>admin/scholars/index.php?view=disbursement"><i class="fa fa-credit-card"></i> Disbursement Records</a></li>
