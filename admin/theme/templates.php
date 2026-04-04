@@ -300,7 +300,7 @@
                             <li class="divider"></li>
                             <li><a href="<?php echo web_root;?>admin/scholars/index.php?view=payroll"><i class="fa fa-money"></i> Payroll Management</a></li>
                             <li><a href="<?php echo web_root;?>admin/scholars/index.php?view=disbursement"><i class="fa fa-credit-card"></i> Disbursement Records</a></li>
-                            <li><a href="<?php echo web_root;?>admin/scholars/index.php?view=payroll_reports"><i class="fa fa-bar-chart"></i> Payroll Reports</a></li>
+                            <!-- <li><a href="<?php echo web_root;?>admin/scholars/index.php?view=payroll_reports"><i class="fa fa-bar-chart"></i> Payroll Reports</a></li> -->
                         </ul>
                     </li>
 
