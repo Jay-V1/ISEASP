@@ -16,9 +16,9 @@ if (!isset($_SESSION['ADMIN_USERID'])) {
         <a href="index.php?view=schedule" class="btn btn-primary">
             <i class="fa fa-calendar"></i> View Schedule
         </a>
-        <a href="#" onclick="window.print()" class="btn btn-default">
+        <!-- <a href="#" onclick="window.print()" class="btn btn-default">
             <i class="fa fa-print"></i> Print Results
-        </a>
+        </a> -->
     </div>
 </div>
 
