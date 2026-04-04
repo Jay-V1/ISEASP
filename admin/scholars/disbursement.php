@@ -38,9 +38,9 @@ $records = getDisbursementRecords();
         <a href="index.php?view=payroll" class="btn btn-default">
             <i class="fa fa-arrow-left"></i> Back to Payroll
         </a>
-        <a href="#" onclick="window.print()" class="btn btn-default">
+        <!-- <a href="#" onclick="window.print()" class="btn btn-default">
             <i class="fa fa-print"></i> Print List
-        </a>
+        </a> -->
     </div>
 </div>
 

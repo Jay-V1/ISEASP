@@ -145,9 +145,9 @@ $payrolls = getPayrollList();
             <i class="fa fa-plus"></i> Generate School Year Payroll
         </button>
         <?php endif; ?>
-        <a href="index.php?view=payroll_reports" class="btn btn-info">
+        <!-- <a href="index.php?view=payroll_reports" class="btn btn-info">
             <i class="fa fa-bar-chart"></i> Payroll Reports
-        </a>
+        </a> -->
         <a href="index.php?view=disbursement" class="btn btn-default">
             <i class="fa fa-credit-card"></i> Disbursement Records
         </a>
