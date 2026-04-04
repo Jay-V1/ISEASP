@@ -216,7 +216,7 @@ if (isset($_POST['generate_slip'])) {
 </div>
 
 <!-- Requirements Progress -->
-<div class="row">
+<!-- <div class="row">
     <div class="col-md-8 col-md-offset-2">
         <div class="panel panel-info">
             <div class="panel-heading">
@@ -251,7 +251,7 @@ if (isset($_POST['generate_slip'])) {
             </div>
         </div>
     </div>
-</div>
+</div> -->
 
 <script>
 // Auto-calculate end time if needed

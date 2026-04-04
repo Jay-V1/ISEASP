@@ -116,7 +116,7 @@ global $mydb;
                 <th>Course</th>
                 <th>Year</th>
                 <th>Requirements Status</th>
-                <th>Progress</th>
+                <!-- <th>Progress</th> -->
                 <th width="15%">Action</th>
             </tr>
         </thead>
@@ -182,12 +182,12 @@ global $mydb;
                 <td><?= htmlspecialchars($a->COURSE ?? 'N/A') ?></td>
                 <td><?= htmlspecialchars($a->YEARLEVEL ?? 'N/A') ?></td>
                 <td><?= $status_label ?></td>
-                <td style="width: 200px;">
+                <!-- <td style="width: 200px;">
                     <div class="progress progress-xs">
                         <div class="progress-bar <?= $progress_class ?>" style="width: <?= $percentage ?>%"></div>
                     </div>
                     <small><?= $a->verified_count ?>/<?= $a->total_required ?> verified</small>
-                </td>
+                </td> -->
                 <td class="text-center">
                     <a href="index.php?view=view&id=<?= $a->APPLICANTID ?>" 
                        class="btn btn-info btn-xs" title="View Requirements">

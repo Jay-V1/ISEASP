@@ -222,10 +222,10 @@
                             <li><a href="<?php echo web_root;?>admin/applications/"><i class="fa fa-circle-o"></i> All Applicants</a></li>
                             <li><a href="<?php echo web_root;?>admin/applications/index.php?view=add"><i class="fa fa-circle-o"></i> Add New Applicant</a></li>
                             <li><a href="<?php echo web_root;?>admin/applications/index.php?view=missing_requirements"><i class="fa fa-circle-o"></i> Missing Requirements</a></li>
-                            <li><a href="<?php echo web_root;?>admin/applications/index.php?view=for_exam"><i class="fa fa-circle-o"></i> For Examination</a></li>
+                            <!-- <li><a href="<?php echo web_root;?>admin/applications/index.php?view=for_exam"><i class="fa fa-circle-o"></i> For Examination</a></li>
                             <li><a href="<?php echo web_root;?>admin/applications/index.php?view=for_evaluation"><i class="fa fa-circle-o"></i> For Evaluation</a></li>
                             <li><a href="<?php echo web_root;?>admin/applications/index.php?view=for_interview"><i class="fa fa-circle-o"></i> For Interview</a></li>
-                            <li><a href="<?php echo web_root;?>admin/applications/index.php?view=qualified"><i class="fa fa-circle-o"></i> Qualified</a></li>
+                            <li><a href="<?php echo web_root;?>admin/applications/index.php?view=qualified"><i class="fa fa-circle-o"></i> Qualified</a></li> -->
                         </ul>
                     </li>
 
