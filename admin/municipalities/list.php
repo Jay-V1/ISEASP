@@ -72,9 +72,9 @@ global $mydb;
         <a href="index.php?view=add" class="btn btn-primary">
             <i class="fa fa-plus"></i> Add New Municipality
         </a>
-        <a href="#" onclick="window.print()" class="btn btn-default">
+        <!-- <a href="#" onclick="window.print()" class="btn btn-default">
             <i class="fa fa-print"></i> Print List
-        </a>
+        </a> -->
     </div>
 </div>
 

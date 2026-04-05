@@ -6,14 +6,14 @@ if (!isset($_SESSION['ADMIN_USERID'])) {
 global $mydb;
 ?>
 
-<div class="row">
+<!-- <div class="row">
     <div class="col-lg-12">
         <h1 class="page-header">Qualified Applicants</h1>
     </div>
-</div>
+</div> -->
 
 <!-- Action Buttons -->
-<div class="row">
+<!-- <div class="row">
     <div class="col-lg-12" style="margin-bottom: 15px;">
         <a href="index.php" class="btn btn-primary">
             <i class="fa fa-arrow-left"></i> Back to Evaluation
@@ -22,7 +22,7 @@ global $mydb;
             <i class="fa fa-print"></i> Print List
         </a>
     </div>
-</div>
+</div> -->
 
 <div class="row">
     <div class="col-lg-12">

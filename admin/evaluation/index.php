@@ -5,7 +5,7 @@ if (!isset($_SESSION['ADMIN_USERID'])) {
 }
 
 $view = (isset($_GET['view']) && $_GET['view'] != '') ? $_GET['view'] : '';
-$title = "Final Evaluation";
+$title = "Qualified Applicants";
 $subtitle = "";
 
 switch ($view) {

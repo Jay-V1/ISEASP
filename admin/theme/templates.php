@@ -90,7 +90,7 @@
                         ?>
                         
                         <!-- Notifications Dropdown -->
-                        <li class="dropdown notifications-menu">
+                        <!-- <li class="dropdown notifications-menu">
                             <a href="#" class="dropdown-toggle" data-toggle="dropdown">
                                 <i class="fa fa-bell-o"></i>
                                 <?php if($notification_count > 0): ?>
@@ -107,7 +107,7 @@
                                 </li>
                                 <li class="footer"><a href="<?php echo web_root;?>admin/notifications/">View all</a></li>
                             </ul>
-                        </li>
+                        </li> -->
 
                         <!-- User Menu -->
                         <li class="dropdown user user-menu">
@@ -271,17 +271,18 @@
                         </ul>
                     </li>
 
-                    <!-- Final Evaluation -->
+                    
+
+                    <!-- Qualified Applicants -->
                     <li class="treeview <?php echo (strpos($_SERVER['REQUEST_URI'], 'evaluation') !== false) ? "active" : "";?>">
                         <a href="#">
-                            <i class="fa fa-gavel"></i> <span>Final Evaluation</span>
+                            <i class="fa fa-check-circle-o"></i> <span>Qualified</span>
                             <span class="pull-right-container">
                                 <i class="fa fa-angle-left pull-right"></i>
                             </span>
                         </a>
                         <ul class="treeview-menu">
-                            <li><a href="<?php echo web_root;?>admin/evaluation/"><i class="fa fa-circle-o"></i> For Evaluation</a></li>
-                            <!-- <li><a href="<?php echo web_root;?>admin/evaluation/index.php?view=qualified"><i class="fa fa-circle-o"></i> Qualified</a></li> -->
+                            <li><a href="<?php echo web_root;?>admin/evaluation/index.php?view=qualified"><i class="fa fa-users"></i> Qualified Applicants</a></li>
                         </ul>
                     </li>
 
@@ -299,7 +300,7 @@
                             <li><a href="<?php echo web_root;?>admin/scholars/index.php?view=graduates"><i class="fa fa-trophy"></i> Graduates</a></li>
                             <li class="divider"></li>
                             <li><a href="<?php echo web_root;?>admin/scholars/index.php?view=payroll"><i class="fa fa-money"></i> Payroll Management</a></li>
-                            <li><a href="<?php echo web_root;?>admin/scholars/index.php?view=disbursement"><i class="fa fa-credit-card"></i> Disbursement Records</a></li>
+                            <!-- <li><a href="<?php echo web_root;?>admin/scholars/index.php?view=disbursement"><i class="fa fa-credit-card"></i> Disbursement Records</a></li> -->
                             <!-- <li><a href="<?php echo web_root;?>admin/scholars/index.php?view=payroll_reports"><i class="fa fa-bar-chart"></i> Payroll Reports</a></li> -->
                         </ul>
                     </li>
@@ -312,7 +313,7 @@
                     </li>
 
                     <!-- Reports -->
-                    <li class="treeview <?php echo (strpos($_SERVER['REQUEST_URI'], 'reports') !== false) ? "active" : "";?>">
+                    <!-- <li class="treeview <?php echo (strpos($_SERVER['REQUEST_URI'], 'reports') !== false) ? "active" : "";?>">
                         <a href="#">
                             <i class="fa fa-bar-chart"></i> <span>Reports</span>
                             <span class="pull-right-container">
@@ -326,7 +327,7 @@
                             <li><a href="<?php echo web_root;?>admin/reports/index.php?view=district"><i class="fa fa-sun-o"></i> Per District</a></li>
                             <li><a href="<?php echo web_root;?>admin/reports/index.php?view=municipality"><i class="fa fa-map-marker"></i> Per Municipality</a></li>
                         </ul>
-                    </li>
+                    </li> -->
 
                     <!-- System Settings -->
                     <li class="treeview <?php echo (strpos($_SERVER['REQUEST_URI'], 'system') !== false) ? "active" : "";?>">
