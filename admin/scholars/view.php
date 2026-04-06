@@ -394,13 +394,55 @@ $history = $mydb->loadResultList();
     </div>
 </div>
 
-<!-- Termination Confirmation Script -->
+<script src="<?php echo web_root;?>plugins/jQuery/jQuery-2.1.4.min.js"></script>
 <script>
+// Make sure jQuery is loaded before running the script
+if (typeof jQuery === 'undefined') {
+    console.error('jQuery is not loaded!');
+} else {
+    console.log('jQuery is loaded, version: ' + jQuery.fn.jquery);
+    
+    // Graduation form submission
+    jQuery('#graduateForm').on('submit', function(e) {
+        e.preventDefault();
+        
+        var formData = jQuery(this).serialize();
+        formData += '&id=<?= $scholar->AWARD_ID ?>';
+        
+        console.log('Submitting graduation for award ID: <?= $scholar->AWARD_ID ?>');
+        console.log('Form data: ' + formData);
+        
+        if (confirm('Are you sure you want to mark this scholar as graduated? This action cannot be undone.')) {
+            jQuery.ajax({
+                url: 'controller.php?action=graduate',
+                type: 'POST',
+                data: formData,
+                dataType: 'json',
+                success: function(response) {
+                    console.log('Response:', response);
+                    if (response.status == 'success') {
+                        alert(response.message);
+                        location.reload();
+                    } else {
+                        alert('Error: ' + response.message);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('AJAX Error:', error);
+                    console.error('Response Text:', xhr.responseText);
+                    alert('An error occurred. Please try again. Check console for details.');
+                }
+            });
+        }
+    });
+}
+
+// Termination function
 function confirmTerminate(awardId) {
     if (confirm('Are you sure you want to terminate this scholarship? This action cannot be undone.')) {
         var reason = prompt('Please enter reason for termination:');
         if (reason) {
-            $.post('controller.php?action=terminate', {
+            jQuery.post('controller.php?action=terminate', {
                 id: awardId,
                 reason: reason
             }, function(response) {
@@ -414,6 +456,7 @@ function confirmTerminate(awardId) {
         }
     }
 }
+
 
 // Graduation form submission
 $('#graduateForm').on('submit', function(e) {
