@@ -4,6 +4,18 @@ if (!isset($_SESSION['ADMIN_USERID'])) {
 }
 
 global $mydb;
+
+// Debug - Check what's in the database
+$mydb->setQuery("SELECT AWARD_ID, APPLICANTID, STATUS FROM tbl_scholarship_awards WHERE STATUS = 'Graduated'");
+$mydb->executeQuery();
+$debug_graduates = $mydb->loadResultList();
+
+echo '<div class="alert alert-info">';
+echo '<strong>Debug Info:</strong> Found ' . count($debug_graduates) . ' graduated scholars in database.<br>';
+foreach($debug_graduates as $dg) {
+    echo 'Award ID: ' . $dg->AWARD_ID . ', Applicant ID: ' . $dg->APPLICANTID . ', Status: ' . $dg->STATUS . '<br>';
+}
+echo '</div>';
 ?>
 
 <div class="row">
@@ -15,71 +27,89 @@ global $mydb;
 <!-- Graduation Statistics -->
 <div class="row" style="margin-bottom: 20px;">
     <div class="col-md-3">
-        <div class="info-box">
-            <span class="info-box-icon bg-green"><i class="fa fa-trophy"></i></span>
-            <div class="info-box-content">
-                <span class="info-box-text">With Honors</span>
-                <span class="info-box-number">
-                    <?php
-                    $mydb->setQuery("SELECT COUNT(*) as total FROM tbl_scholarship_history 
-                                     WHERE STATUS = 'Graduated' AND (REMARKS LIKE '%Cum Laude%' OR REMARKS LIKE '%Honors%')");
-                    $mydb->executeQuery();
-                    $honors = $mydb->loadSingleResult();
-                    echo $honors->total ?? 0;
-                    ?>
-                </span>
+        <div class="small-box bg-green">
+            <div class="inner">
+                <?php
+                $mydb->setQuery("SELECT COUNT(*) as total FROM tbl_scholarship_awards WHERE STATUS = 'Graduated'");
+                $mydb->executeQuery();
+                $result = $mydb->loadSingleResult();
+                $total = $result ? $result->total : 0;
+                ?>
+                <h3><?= $total ?></h3>
+                <p>Total Graduates</p>
+            </div>
+            <div class="icon">
+                <i class="fa fa-graduation-cap"></i>
             </div>
         </div>
     </div>
+    
     <div class="col-md-3">
-        <div class="info-box">
-            <span class="info-box-icon bg-aqua"><i class="fa fa-calendar"></i></span>
-            <div class="info-box-content">
-                <span class="info-box-text">This Year</span>
-                <span class="info-box-number">
-                    <?php
-                    $current_year = date('Y') . '-' . (date('Y') + 1);
-                    $mydb->setQuery("SELECT COUNT(*) as total FROM tbl_scholarship_history 
-                                     WHERE STATUS = 'Graduated' AND SCHOOL_YEAR = '$current_year'");
-                    $mydb->executeQuery();
-                    $this_year = $mydb->loadSingleResult();
-                    echo $this_year->total ?? 0;
-                    ?>
-                </span>
+        <div class="small-box bg-aqua">
+            <div class="inner">
+                <?php
+                $current_year = date('Y');
+                $mydb->setQuery("SELECT COUNT(*) as total FROM tbl_applicants 
+                                 WHERE STATUS = 'Graduated' AND YEAR(LAST_UPDATED) = '$current_year'");
+                $mydb->executeQuery();
+                $result = $mydb->loadSingleResult();
+                $this_year = $result ? $result->total : 0;
+                ?>
+                <h3><?= $this_year ?></h3>
+                <p>Graduated This Year</p>
+            </div>
+            <div class="icon">
+                <i class="fa fa-calendar"></i>
             </div>
         </div>
     </div>
+    
     <div class="col-md-3">
-        <div class="info-box">
-            <span class="info-box-icon bg-yellow"><i class="fa fa-line-chart"></i></span>
-            <div class="info-box-content">
-                <span class="info-box-text">Avg. GPA</span>
-                <span class="info-box-number">
-                    <?php
-                    $mydb->setQuery("SELECT AVG(GPA) as avg FROM tbl_scholarship_history WHERE STATUS = 'Graduated'");
-                    $mydb->executeQuery();
-                    $avg_gpa = $mydb->loadSingleResult();
-                    echo round($avg_gpa->avg ?? 0, 2) . '%';
-                    ?>
-                </span>
+        <div class="small-box bg-yellow">
+            <div class="inner">
+                <?php
+                $mydb->setQuery("SELECT AVG(GPA) as avg FROM tbl_applicants WHERE STATUS = 'Graduated' AND GPA IS NOT NULL");
+                $mydb->executeQuery();
+                $result = $mydb->loadSingleResult();
+                $avg_gpa = $result ? round($result->avg, 2) : 0;
+                ?>
+                <h3><?= $avg_gpa ?>%</h3>
+                <p>Average GPA</p>
+            </div>
+            <div class="icon">
+                <i class="fa fa-line-chart"></i>
             </div>
         </div>
     </div>
+    
     <div class="col-md-3">
-        <div class="info-box">
-            <span class="info-box-icon bg-red"><i class="fa fa-users"></i></span>
-            <div class="info-box-content">
-                <span class="info-box-text">Total Graduates</span>
-                <span class="info-box-number">
-                    <?php
-                    $mydb->setQuery("SELECT COUNT(DISTINCT APPLICANTID) as total FROM tbl_scholarship_history WHERE STATUS = 'Graduated'");
-                    $mydb->executeQuery();
-                    $total = $mydb->loadSingleResult();
-                    echo $total->total ?? 0;
-                    ?>
-                </span>
+        <div class="small-box bg-red">
+            <div class="inner">
+                <?php
+                $mydb->setQuery("SELECT COUNT(*) as total FROM tbl_alumni WHERE HONORS IS NOT NULL AND HONORS != ''");
+                $mydb->executeQuery();
+                $result = $mydb->loadSingleResult();
+                $with_honors = $result ? $result->total : 0;
+                ?>
+                <h3><?= $with_honors ?></h3>
+                <p>With Honors</p>
+            </div>
+            <div class="icon">
+                <i class="fa fa-star"></i>
             </div>
         </div>
+    </div>
+</div>
+
+<!-- Action Buttons -->
+<div class="row">
+    <div class="col-lg-12" style="margin-bottom: 15px;">
+        <a href="index.php?view=list" class="btn btn-primary">
+            <i class="fa fa-arrow-left"></i> Back to Scholars
+        </a>
+        <a href="#" onclick="window.print()" class="btn btn-default">
+            <i class="fa fa-print"></i> Print List
+        </a>
     </div>
 </div>
 
@@ -98,9 +128,16 @@ global $mydb;
                         <label>School Year:</label>
                         <select name="school_year" class="form-control input-sm">
                             <option value="">All Years</option>
-                            <option value="2023-2024" <?= isset($_GET['school_year']) && $_GET['school_year'] == '2023-2024' ? 'selected' : '' ?>>2023-2024</option>
-                            <option value="2024-2025" <?= isset($_GET['school_year']) && $_GET['school_year'] == '2024-2025' ? 'selected' : '' ?>>2024-2025</option>
-                            <option value="2025-2026" <?= isset($_GET['school_year']) && $_GET['school_year'] == '2025-2026' ? 'selected' : '' ?>>2025-2026</option>
+                            <?php
+                            $mydb->setQuery("SELECT DISTINCT SCHOOL_YEAR FROM tbl_scholarship_awards WHERE STATUS = 'Graduated' ORDER BY SCHOOL_YEAR DESC");
+                            $mydb->executeQuery();
+                            $years = $mydb->loadResultList();
+                            foreach ($years as $year):
+                            ?>
+                            <option value="<?= $year->SCHOOL_YEAR ?>" <?= isset($_GET['school_year']) && $_GET['school_year'] == $year->SCHOOL_YEAR ? 'selected' : '' ?>>
+                                <?= $year->SCHOOL_YEAR ?>
+                            </option>
+                            <?php endforeach; ?>
                         </select>
                     </div>
                     
@@ -109,15 +146,6 @@ global $mydb;
                         <input type="text" name="municipality" class="form-control input-sm" 
                                value="<?= isset($_GET['municipality']) ? $_GET['municipality'] : '' ?>" 
                                placeholder="Enter municipality">
-                    </div>
-                    
-                    <div class="form-group" style="margin-right: 10px;">
-                        <label>Honors:</label>
-                        <select name="honors" class="form-control input-sm">
-                            <option value="">All</option>
-                            <option value="honors" <?= isset($_GET['honors']) && $_GET['honors'] == 'honors' ? 'selected' : '' ?>>With Honors</option>
-                            <option value="none" <?= isset($_GET['honors']) && $_GET['honors'] == 'none' ? 'selected' : '' ?>>No Honors</option>
-                        </select>
                     </div>
                     
                     <button type="submit" class="btn btn-primary btn-sm">
@@ -132,15 +160,6 @@ global $mydb;
     </div>
 </div>
 
-<!-- Export Buttons -->
-<div class="row">
-    <div class="col-lg-12" style="margin-bottom: 10px;">
-        <a href="#" onclick="window.print()" class="btn btn-default">
-            <i class="fa fa-print"></i> Print List
-        </a>
-    </div>
-</div>
-
 <!-- Graduates List -->
 <div class="row">
     <div class="col-lg-12">
@@ -150,110 +169,97 @@ global $mydb;
             </div>
             <div class="panel-body">
                 <div class="table-responsive">
-                    <table id="graduates-table" class="table table-striped table-bordered table-hover" style="font-size:13px">
+                    <table id="graduates-table" class="table table-striped table-bordered table-hover">
                         <thead>
                             <tr>
-                                <th>ID</th>
+                                <th>Award ID</th>
                                 <th>Name</th>
                                 <th>Municipality</th>
                                 <th>School</th>
                                 <th>Course</th>
-                                <th>Year Graduated</th>
+                                <th>School Year</th>
                                 <th>Final GPA</th>
                                 <th>Honors</th>
-                                <th>Action</th>
+                                <th>Graduation Date</th>
+                                <th width="10%">Action</th>
                             </tr>
                         </thead>
                         <tbody>
                             <?php
                             // Build query with filters
                             $where = array();
-                            $where[] = "h.STATUS = 'Graduated'";
+                            $where[] = "sa.STATUS = 'Graduated'";
                             
                             if (isset($_GET['school_year']) && !empty($_GET['school_year'])) {
-                                $where[] = "h.SCHOOL_YEAR = '" . $_GET['school_year'] . "'";
+                                $where[] = "sa.SCHOOL_YEAR = '" . $_GET['school_year'] . "'";
                             }
                             
                             if (isset($_GET['municipality']) && !empty($_GET['municipality'])) {
-                                $municipality = $_GET['municipality'];
-                                $where[] = "a.MUNICIPALITY LIKE '%$municipality%'";
-                            }
-                            
-                            if (isset($_GET['honors']) && $_GET['honors'] == 'honors') {
-                                $where[] = "(h.REMARKS LIKE '%Cum Laude%' OR h.REMARKS LIKE '%Honors%')";
-                            } elseif (isset($_GET['honors']) && $_GET['honors'] == 'none') {
-                                $where[] = "(h.REMARKS NOT LIKE '%Cum Laude%' AND h.REMARKS NOT LIKE '%Honors%')";
+                                $where[] = "a.MUNICIPALITY LIKE '%" . $_GET['municipality'] . "%'";
                             }
                             
                             $where_clause = "WHERE " . implode(" AND ", $where);
                             
                             $sql = "
                                 SELECT 
+                                    sa.AWARD_ID,
+                                    sa.SCHOOL_YEAR,
+                                    sa.STATUS as AWARD_STATUS,
                                     a.APPLICANTID,
                                     a.LASTNAME, a.FIRSTNAME, a.MIDDLENAME, a.SUFFIX,
                                     a.MUNICIPALITY, a.SCHOOL, a.COURSE,
-                                    h.SCHOOL_YEAR,
-                                    h.GPA,
-                                    h.REMARKS,
-                                    h.UPDATED_AT
-                                FROM tbl_scholarship_history h
-                                INNER JOIN tbl_applicants a ON h.APPLICANTID = a.APPLICANTID
-                                $where_clause
-                                ORDER BY h.UPDATED_AT DESC
+                                    a.GPA as FINAL_GPA,
+                                    a.STATUS as APPLICANT_STATUS,
+                                    a.LAST_UPDATED as GRADUATION_DATE,
+                                    al.HONORS
+                                FROM tbl_scholarship_awards sa
+                                INNER JOIN tbl_applicants a ON sa.APPLICANTID = a.APPLICANTID
+                                LEFT JOIN tbl_alumni al ON a.APPLICANTID = al.APPLICANTID
+                                WHERE sa.STATUS = 'Graduated' 
+                                ORDER BY a.LAST_UPDATED DESC, a.LASTNAME ASC
                             ";
                             
                             $mydb->setQuery($sql);
                             $mydb->executeQuery();
                             $graduates = $mydb->loadResultList();
                             
-                            $counter = 1;
                             foreach ($graduates as $g):
-                                // Extract honors from remarks
-                                $honors_text = 'None';
-                                $honors_class = '';
-                                if (strpos($g->REMARKS, 'Summa Cum Laude') !== false) {
-                                    $honors_text = 'Summa Cum Laude';
-                                    $honors_class = 'label-success';
-                                } elseif (strpos($g->REMARKS, 'Magna Cum Laude') !== false) {
-                                    $honors_text = 'Magna Cum Laude';
-                                    $honors_class = 'label-info';
-                                } elseif (strpos($g->REMARKS, 'Cum Laude') !== false) {
-                                    $honors_text = 'Cum Laude';
-                                    $honors_class = 'label-primary';
-                                } elseif (strpos($g->REMARKS, 'With Highest Honors') !== false) {
-                                    $honors_text = 'With Highest Honors';
-                                    $honors_class = 'label-success';
-                                } elseif (strpos($g->REMARKS, 'With High Honors') !== false) {
-                                    $honors_text = 'With High Honors';
-                                    $honors_class = 'label-info';
-                                } elseif (strpos($g->REMARKS, 'With Honors') !== false) {
-                                    $honors_text = 'With Honors';
-                                    $honors_class = 'label-primary';
+                                $fullname = $g->LASTNAME . ', ' . $g->FIRSTNAME;
+                                if(!empty($g->MIDDLENAME)) {
+                                    $fullname .= ' ' . substr($g->MIDDLENAME, 0, 1) . '.';
                                 }
+                                if(!empty($g->SUFFIX)) {
+                                    $fullname .= ' ' . $g->SUFFIX;
+                                }
+                                
+                                // Determine honors
+                                $honors = $g->HONORS ?? 'None';
+                                $honors_class = 'label-default';
+                                if ($honors == 'Summa Cum Laude') {
+                                    $honors_class = 'label-success';
+                                } elseif ($honors == 'Magna Cum Laude') {
+                                    $honors_class = 'label-info';
+                                } elseif ($honors == 'Cum Laude') {
+                                    $honors_class = 'label-primary';
+                                } elseif ($honors != 'None') {
+                                    $honors_class = 'label-warning';
+                                }
+                                
+                                $graduation_date = $g->GRADUATION_DATE ? date('M d, Y', strtotime($g->GRADUATION_DATE)) : 'N/A';
                             ?>
                             <tr>
-                                <td><?= $counter++ ?></td>
-                                <td><?= htmlspecialchars($g->LASTNAME . ', ' . $g->FIRSTNAME . ' ' . ($g->MIDDLENAME ?? '')) ?></td>
+                                <td class="text-center"><?= str_pad($g->AWARD_ID, 5, '0', STR_PAD_LEFT) ?></td>
+                                <td><?= htmlspecialchars($fullname) ?></td>
                                 <td><?= htmlspecialchars($g->MUNICIPALITY ?? 'N/A') ?></td>
                                 <td><?= htmlspecialchars($g->SCHOOL ?? 'N/A') ?></td>
                                 <td><?= htmlspecialchars($g->COURSE ?? 'N/A') ?></td>
                                 <td><?= $g->SCHOOL_YEAR ?></td>
-                                <td><strong><?= $g->GPA ?>%</strong></td>
-                                <td>
-                                    <?php if ($honors_class): ?>
-                                        <span class="label <?= $honors_class ?>"><?= $honors_text ?></span>
-                                    <?php else: ?>
-                                        <span class="label label-default">None</span>
-                                    <?php endif; ?>
-                                </td>
+                                <td class="text-center"><strong><?= $g->FINAL_GPA ? $g->FINAL_GPA . '%' : 'N/A' ?></strong></td>
+                                <td class="text-center"><span class="label <?= $honors_class ?>"><?= $honors ?></span></td>
+                                <td><?= $graduation_date ?></td>
                                 <td class="text-center">
-                                    <a href="../applications/index.php?view=view&id=<?= $g->APPLICANTID ?>" 
-                                       class="btn btn-info btn-xs" title="View Details">
+                                    <a href="index.php?view=view&id=<?= $g->AWARD_ID ?>" class="btn btn-info btn-xs">
                                         <i class="fa fa-eye"></i> View
-                                    </a>
-                                    <a href="#" onclick="generateCertificate(<?= $g->APPLICANTID ?>)" 
-                                       class="btn btn-success btn-xs" title="Generate Certificate">
-                                        <i class="fa fa-certificate"></i> Certificate
                                     </a>
                                 </td>
                             </tr>
@@ -261,12 +267,12 @@ global $mydb;
                             
                             <?php if (empty($graduates)): ?>
                             <tr>
-                                <td colspan="9" class="text-center">
+                                <td colspan="10" class="text-center">
                                     <div class="alert alert-info" style="margin: 20px;">
                                         <i class="fa fa-info-circle"></i> No graduated scholars found.
                                     </div>
-                                </td>
-                            </tr>
+                                </span>
+                                </tr>
                             <?php endif; ?>
                         </tbody>
                     </table>
@@ -276,116 +282,76 @@ global $mydb;
     </div>
 </div>
 
-<!-- Alumni Highlights Section -->
-<!-- <div class="row" style="margin-top: 20px;">
-    <div class="col-lg-12">
-        <div class="panel panel-info">
-            <div class="panel-heading">
-                <i class="fa fa-star"></i> Alumni Highlights
-            </div>
-            <div class="panel-body">
-                <div class="row">
-                    <?php
-                    // Get top graduates
-                    $mydb->setQuery("
-                        SELECT 
-                            a.LASTNAME, a.FIRSTNAME, a.MIDDLENAME,
-                            a.SCHOOL, a.COURSE,
-                            h.GPA,
-                            h.REMARKS
-                        FROM tbl_scholarship_history h
-                        INNER JOIN tbl_applicants a ON h.APPLICANTID = a.APPLICANTID
-                        WHERE h.STATUS = 'Graduated'
-                        ORDER BY h.GPA DESC
-                        LIMIT 3
-                    ");
-                    $mydb->executeQuery();
-                    $top_graduates = $mydb->loadResultList();
-                    
-                    foreach ($top_graduates as $top):
-                    ?>
-                    <div class="col-md-4">
-                        <div class="well text-center">
-                            <i class="fa fa-user-circle fa-4x text-success"></i>
-                            <h4><?= htmlspecialchars($top->FIRSTNAME . ' ' . $top->LASTNAME) ?></h4>
-                            <p><?= htmlspecialchars($top->SCHOOL) ?></p>
-                            <p><?= htmlspecialchars($top->COURSE) ?></p>
-                            <h3><span class="label label-success">GPA: <?= $top->GPA ?>%</span></h3>
-                            <p><em><?= htmlspecialchars($top->REMARKS) ?></em></p>
-                        </div>
-                    </div>
-                    <?php endforeach; ?>
-                </div>
-            </div>
-        </div>
-    </div>
-</div> -->
-
 <script>
-function exportToExcel() {
-    window.location.href = 'export_graduates.php';
-}
-
-function generateCertificate(applicantId) {
-    window.open('../certificates/generate.php?type=graduation&id=' + applicantId, '_blank');
-}
-
 $(document).ready(function() {
     $('#graduates-table').DataTable({
         "pageLength": 25,
-        "order": [[5, "desc"], [6, "desc"]],
+        "order": [[8, "desc"]],
+        "columnDefs": [
+            { "orderable": false, "targets": [9] }
+        ],
         "language": {
             "emptyTable": "No graduated scholars found",
             "info": "Showing _START_ to _END_ of _TOTAL_ graduates",
             "infoEmpty": "Showing 0 to 0 of 0 graduates",
             "infoFiltered": "(filtered from _MAX_ total graduates)"
-        },
-        "columnDefs": [
-            { "orderable": false, "targets": [8] }
-        ]
+        }
     });
 });
 </script>
 
 <style>
-.info-box {
+.small-box {
+    border-radius: 5px;
+    position: relative;
     display: block;
-    min-height: 90px;
-    background: #fff;
-    width: 100%;
+    margin-bottom: 20px;
     box-shadow: 0 1px 1px rgba(0,0,0,0.1);
-    border-radius: 2px;
-    margin-bottom: 15px;
 }
-.info-box-icon {
-    border-top-left-radius: 2px;
-    border-top-right-radius: 0;
-    border-bottom-right-radius: 0;
-    border-bottom-left-radius: 2px;
-    display: block;
-    float: left;
-    height: 90px;
-    width: 90px;
-    text-align: center;
-    font-size: 45px;
-    line-height: 90px;
-    background: rgba(0,0,0,0.2);
+
+.small-box .inner {
+    padding: 10px;
 }
-.info-box-content {
-    padding: 5px 10px;
-    margin-left: 90px;
-}
-.info-box-text {
-    display: block;
-    font-size: 14px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    text-transform: uppercase;
-}
-.info-box-number {
-    display: block;
+
+.small-box h3 {
+    font-size: 38px;
     font-weight: bold;
-    font-size: 18px;
+    margin: 0 0 10px 0;
+    white-space: nowrap;
+    padding: 0;
+}
+
+.small-box p {
+    font-size: 15px;
+    margin: 0;
+}
+
+.small-box .icon {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 0;
+    font-size: 70px;
+    color: rgba(0,0,0,0.15);
+}
+
+.small-box.bg-green {
+    background-color: #00a65a;
+    color: #fff;
+}
+
+.small-box.bg-aqua {
+    background-color: #00c0ef;
+    color: #fff;
+}
+
+.small-box.bg-yellow {
+    background-color: #f39c12;
+    color: #fff;
+}
+
+.small-box.bg-red {
+    background-color: #dd4b39;
+    color: #fff;
 }
 </style>

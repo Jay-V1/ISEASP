@@ -169,54 +169,131 @@ function doTerminate() {
 function doGraduate() {
     global $mydb;
     
+    // Log that the function was called
+    error_log("doGraduate() function called");
+    
     if (isset($_POST['id'])) {
         $award_id = intval($_POST['id']);
         $final_gpa = floatval($_POST['final_gpa']);
+        $honors = isset($_POST['honors']) ? $_POST['honors'] : '';
+        $graduation_date = isset($_POST['graduation_date']) ? $_POST['graduation_date'] : date('Y-m-d');
         
-        // Get applicant ID
-        $mydb->setQuery("SELECT APPLICANTID FROM tbl_scholarship_awards WHERE AWARD_ID = $award_id");
+        // Log the received data
+        error_log("Award ID: $award_id, GPA: $final_gpa, Honors: $honors, Date: $graduation_date");
+        
+        // Get applicant ID and details
+        $mydb->setQuery("SELECT APPLICANTID, SCHOOL_YEAR, SEMESTER FROM tbl_scholarship_awards WHERE AWARD_ID = $award_id");
         $mydb->executeQuery();
         $result = $mydb->loadSingleResult();
+        
+        if(!$result) {
+            error_log("Scholarship award not found for Award ID: $award_id");
+            echo json_encode(['status' => 'error', 'message' => 'Scholarship award not found']);
+            exit;
+        }
+        
         $applicant_id = $result->APPLICANTID;
+        $school_year = $result->SCHOOL_YEAR;
+        $semester = $result->SEMESTER;
         
-        // Get scholar name for logging
-        $mydb->setQuery("SELECT CONCAT(LASTNAME, ', ', FIRSTNAME, ' ', IFNULL(MIDDLENAME, '')) as FULLNAME FROM tbl_applicants WHERE APPLICANTID = $applicant_id");
-        $mydb->executeQuery();
-        $scholar = $mydb->loadSingleResult();
+        error_log("Found Applicant ID: $applicant_id, School Year: $school_year, Semester: $semester");
         
-        // Update award status
-        $sql = "UPDATE tbl_scholarship_awards SET STATUS = 'Graduated' WHERE AWARD_ID = $award_id";
+        // Build remarks with honors if any
+        $remarks = "Successfully graduated";
+        if (!empty($honors)) {
+            $remarks .= " with honors: $honors";
+        }
+        
+        // Update scholarship award status to Graduated
+        $sql = "UPDATE tbl_scholarship_awards SET 
+                STATUS = 'Graduated',
+                REMARKS = CONCAT(IFNULL(REMARKS, ''), ' | GRADUATED: $remarks')
+                WHERE AWARD_ID = $award_id";
         $mydb->setQuery($sql);
-        $mydb->executeQuery();
+        $result1 = $mydb->executeQuery();
+        error_log("Update scholarship award result: " . ($result1 ? "Success" : "Failed"));
         
-        // Update applicant status and GPA
-        $update_sql = "UPDATE tbl_applicants SET STATUS = 'Graduated', GPA = $final_gpa WHERE APPLICANTID = $applicant_id";
+        // Update applicant status to Graduated and update GPA
+        $update_sql = "UPDATE tbl_applicants SET 
+                       STATUS = 'Graduated', 
+                       GPA = $final_gpa 
+                       WHERE APPLICANTID = $applicant_id";
         $mydb->setQuery($update_sql);
-        $mydb->executeQuery();
+        $result2 = $mydb->executeQuery();
+        error_log("Update applicant result: " . ($result2 ? "Success" : "Failed"));
         
-        // Add to history
+        // Add to scholarship history
         $history_sql = "INSERT INTO tbl_scholarship_history 
-                        (APPLICANTID, SCHOOL_YEAR, SEMESTER, STATUS, GPA, REMARKS, UPDATED_BY)
-                        SELECT 
-                            $applicant_id,
-                            SCHOOL_YEAR,
-                            SEMESTER,
-                            'Graduated',
-                            $final_gpa,
-                            'Successfully graduated',
-                            " . $_SESSION['ADMIN_USERID'] . "
-                        FROM tbl_scholarship_awards 
-                        WHERE AWARD_ID = $award_id";
-        
+                        (APPLICANTID, SCHOOL_YEAR, SEMESTER, STATUS, GPA, REMARKS, UPDATED_BY, UPDATED_AT) 
+                        VALUES (
+                            $applicant_id, 
+                            '$school_year', 
+                            '$semester', 
+                            'Graduated', 
+                            $final_gpa, 
+                            '$remarks', 
+                            {$_SESSION['ADMIN_USERID']}, 
+                            NOW()
+                        )";
         $mydb->setQuery($history_sql);
+        $result3 = $mydb->executeQuery();
+        error_log("Insert history result: " . ($result3 ? "Success" : "Failed"));
+        
+        // Check if alumni record already exists
+        $mydb->setQuery("SELECT ALUMNI_ID FROM tbl_alumni WHERE APPLICANTID = $applicant_id");
         $mydb->executeQuery();
+        $existing_alumni = $mydb->loadSingleResult();
+        
+        if(!$existing_alumni) {
+            $alumni_sql = "INSERT INTO tbl_alumni 
+                           (APPLICANTID, GRADUATION_DATE, FINAL_GPA, HONORS, UPDATED_AT) 
+                           VALUES (
+                               $applicant_id, 
+                               '$graduation_date', 
+                               $final_gpa, 
+                               " . ($honors ? "'$honors'" : "NULL") . ", 
+                               NOW()
+                           )";
+            $mydb->setQuery($alumni_sql);
+            $result4 = $mydb->executeQuery();
+            error_log("Insert alumni result: " . ($result4 ? "Success" : "Failed"));
+        } else {
+            $alumni_sql = "UPDATE tbl_alumni SET 
+                           GRADUATION_DATE = '$graduation_date',
+                           FINAL_GPA = $final_gpa,
+                           HONORS = " . ($honors ? "'$honors'" : "NULL") . ",
+                           UPDATED_AT = NOW()
+                           WHERE APPLICANTID = $applicant_id";
+            $mydb->setQuery($alumni_sql);
+            $result4 = $mydb->executeQuery();
+            error_log("Update alumni result: " . ($result4 ? "Success" : "Failed"));
+        }
         
         // Log the action
-        logActivity("Graduated Scholar", "Scholar graduated: " . ($scholar ? $scholar->FULLNAME : "ID: $applicant_id") . " with GPA: $final_gpa%", $applicant_id);
+        $log_sql = "INSERT INTO tbl_application_log 
+                    (APPLICANTID, USERID, USERNAME, USER_ROLE, ACTION, ACTION_TYPE, DETAILS, LOG_DATE)
+                    SELECT 
+                        $applicant_id,
+                        {$_SESSION['ADMIN_USERID']},
+                        USERNAME,
+                        ROLE,
+                        'Graduated Scholar',
+                        'SCHOLAR',
+                        'Scholar graduated with GPA: $final_gpa%. Honors: $honors',
+                        NOW()
+                    FROM tblusers 
+                    WHERE USERID = {$_SESSION['ADMIN_USERID']}";
+        $mydb->setQuery($log_sql);
+        $result5 = $mydb->executeQuery();
+        error_log("Insert log result: " . ($result5 ? "Success" : "Failed"));
         
-        echo json_encode(['status' => 'success']);
+        echo json_encode(['status' => 'success', 'message' => 'Scholar marked as graduated successfully!']);
         exit;
     }
+    
+    error_log("No POST id received");
+    echo json_encode(['status' => 'error', 'message' => 'Invalid request - No ID provided']);
+    exit;
 }
 
 // Payroll Functions

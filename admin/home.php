@@ -401,7 +401,7 @@ $current_sy = '2025-2026';
             </div>
 
             <!-- Top Schools -->
-            <div class="box box-warning">
+            <!-- <div class="box box-warning">
                 <div class="box-header with-border">
                     <h3 class="box-title"><i class="fa fa-trophy"></i> Top Performing Schools</h3>
                 </div>
@@ -419,7 +419,7 @@ $current_sy = '2025-2026';
                         <?php endif; ?>
                     </ol>
                 </div>
-            </div>
+            </div> -->
 
             <!-- Quick Actions -->
             <div class="box box-danger">

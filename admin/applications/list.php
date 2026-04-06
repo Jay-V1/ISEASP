@@ -150,9 +150,9 @@ $school_year = isset($_GET['school_year']) ? $_GET['school_year'] : '';
         <a href="index.php?view=qualified" class="btn btn-success">
             <i class="fa fa-star"></i> Qualified
         </a>
-        <button onclick="printTable()" class="btn btn-default print-btn">
+        <!-- <button onclick="printTable()" class="btn btn-default print-btn">
             <i class="fa fa-print"></i> Print Table
-        </button>
+        </button> -->
     </div>
 </div>
 

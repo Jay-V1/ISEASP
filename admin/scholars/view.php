@@ -76,12 +76,11 @@ $history = $mydb->loadResultList();
             
             <!-- Graduation Button - Only for 4th/5th Year Scholars -->
             <?php if (in_array($scholar->YEARLEVEL, ['4th Year', '5th Year'])): ?>
-            <a href="index.php?view=graduate&id=<?= $scholar->AWARD_ID ?>" class="btn btn-success">
-                <i class="fa fa-graduation-cap"></i> Mark as Graduated
-            </a>
+                <button type="button" class="btn btn-success" data-toggle="modal" data-target="#graduateModal">
+                    <i class="fa fa-graduation-cap"></i> Mark as Graduated
+                </button>
             <?php endif; ?>
         <?php endif; ?>
-        
         
         <?php if ($_SESSION['ADMIN_ROLE'] == 'Super Admin' && $scholar->APPLICANT_STATUS == 'Scholar'): ?>
             <button type="button" class="btn btn-danger" onclick="confirmTerminate(<?= $scholar->AWARD_ID ?>)">
@@ -279,7 +278,7 @@ $history = $mydb->loadResultList();
                         <tr>
                             <td><?= $r->SCHOOL_YEAR ?></td>
                             <td><?= $r->SEMESTER ?></td>
-                            <td><?= $r->PREVIOUS_GPA ?>%</td>
+                            <td><?= $r->PREVIOUS_GPA ?>%</span></td>
                             <td>
                                 <?php
                                 $renewal_status = match($r->STATUS) {
@@ -339,7 +338,7 @@ $history = $mydb->loadResultList();
                                 ?>
                                 <span class="label <?= $hist_status ?>"><?= $h->STATUS ?></span>
                             </td>
-                            <td><?= $h->GPA ?>%</td>
+                            <td><?= $h->GPA ?>%</span></td>
                             <td><?= htmlspecialchars($h->REMARKS ?? '') ?></td>
                             <td><?= htmlspecialchars($h->UPDATED_BY_NAME ?? 'N/A') ?></td>
                         </tr>
@@ -350,6 +349,47 @@ $history = $mydb->loadResultList();
                 <p class="text-center">No history records found.</p>
                 <?php endif; ?>
             </div>
+        </div>
+    </div>
+</div>
+
+<!-- Graduation Modal -->
+<div class="modal fade" id="graduateModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header" style="background-color: #27ae60; color: white;">
+                <button type="button" class="close" data-dismiss="modal" style="color: white;">&times;</button>
+                <h4 class="modal-title"><i class="fa fa-graduation-cap"></i> Mark Scholar as Graduated</h4>
+            </div>
+            <form id="graduateForm">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label>Final GPA (%)</label>
+                        <input type="number" name="final_gpa" class="form-control" required step="0.01" min="0" max="100" value="<?= $scholar->GPA ?>">
+                    </div>
+                    <div class="form-group">
+                        <label>Honors (if any)</label>
+                        <select name="honors" class="form-control">
+                            <option value="">-- No Honors --</option>
+                            <option value="Cum Laude">Cum Laude</option>
+                            <option value="Magna Cum Laude">Magna Cum Laude</option>
+                            <option value="Summa Cum Laude">Summa Cum Laude</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Graduation Date</label>
+                        <input type="date" name="graduation_date" class="form-control" required value="<?= date('Y-m-d') ?>">
+                    </div>
+                    <div class="alert alert-warning">
+                        <i class="fa fa-exclamation-triangle"></i> 
+                        <strong>Warning:</strong> This action cannot be undone. The scholar will be moved to graduates list.
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-success">Confirm Graduation</button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
@@ -374,4 +414,33 @@ function confirmTerminate(awardId) {
         }
     }
 }
+
+// Graduation form submission
+$('#graduateForm').on('submit', function(e) {
+    e.preventDefault();
+
+    var formData = $(this).serialize();
+    formData += '&id=<?= $scholar->AWARD_ID ?>';
+
+    if (confirm('Are you sure you want to mark this scholar as graduated? This action cannot be undone.')) {
+        $.ajax({
+            url: 'controller.php?action=graduate',
+            type: 'POST',
+            data: formData,
+            dataType: 'json',
+            success: function(response) {
+                if (response.status == 'success') {
+                    alert(response.message);
+                    window.location.href = 'index.php?view=graduates';
+                } else {
+                    alert('Error: ' + response.message);
+                }
+            },
+            error: function(xhr, status, error) {
+                console.log(xhr.responseText);
+                alert('An error occurred. Please try again.');
+            }
+        });
+    }
+});
 </script>

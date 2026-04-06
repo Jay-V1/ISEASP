@@ -90,6 +90,9 @@ global $mydb;
         <a href="index.php?view=print_masterlist" class="btn btn-success" target="_blank">
             <i class="fa fa-print"></i> Print Master List
         </a>
+        <a href="#" onclick="window.print()" class="btn btn-default">
+            <i class="fa fa-print"></i> Print This Page
+        </a>
         <a href="index.php?view=payroll" class="btn btn-info">
             <i class="fa fa-money"></i> Payroll Management
         </a>
@@ -207,7 +210,8 @@ global $mydb;
                     <?php
                     // Build query with filters
                     $where = array();
-                    $where[] = "sa.STATUS = '" . (isset($_GET['status']) ? $_GET['status'] : 'Active') . "'";
+                    $status_filter = isset($_GET['status']) ? $_GET['status'] : 'Active';
+                    $where[] = "sa.STATUS = '$status_filter'";
                     
                     if (isset($_GET['school_year']) && !empty($_GET['school_year'])) {
                         $where[] = "sa.SCHOOL_YEAR = '" . $_GET['school_year'] . "'";
@@ -250,7 +254,7 @@ global $mydb;
                         };
                     ?>
                     <tr>
-                        <td><strong>SCH-<?= str_pad($s->AWARD_ID, 5, '0', STR_PAD_LEFT) ?></strong></td>
+                        <td class="text-center"><strong>SCH-<?= str_pad($s->AWARD_ID, 5, '0', STR_PAD_LEFT) ?></strong></td>
                         <td><?= htmlspecialchars($s->LASTNAME . ', ' . $s->FIRSTNAME . ' ' . ($s->MIDDLENAME ?? '') . ' ' . ($s->SUFFIX ?? '')) ?></td>
                         <td><?= htmlspecialchars($s->MUNICIPALITY ?? 'N/A') ?></td>
                         <td><?= htmlspecialchars($s->SCHOOL ?? 'N/A') ?></td>
@@ -307,3 +311,63 @@ $(document).ready(function() {
     });
 });
 </script>
+
+<style>
+.small-box {
+    border-radius: 5px;
+    position: relative;
+    display: block;
+    margin-bottom: 20px;
+    box-shadow: 0 1px 1px rgba(0,0,0,0.1);
+}
+
+.small-box .inner {
+    padding: 10px;
+}
+
+.small-box h3 {
+    font-size: 38px;
+    font-weight: bold;
+    margin: 0 0 10px 0;
+    white-space: nowrap;
+    padding: 0;
+}
+
+.small-box p {
+    font-size: 15px;
+    margin: 0;
+}
+
+.small-box .icon {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 0;
+    font-size: 70px;
+    color: rgba(0,0,0,0.15);
+}
+
+.small-box.bg-green {
+    background-color: #00a65a;
+    color: #fff;
+}
+
+.small-box.bg-yellow {
+    background-color: #f39c12;
+    color: #fff;
+}
+
+.small-box.bg-aqua {
+    background-color: #00c0ef;
+    color: #fff;
+}
+
+.small-box.bg-red {
+    background-color: #dd4b39;
+    color: #fff;
+}
+
+.btn-xs {
+    margin: 2px;
+}
+</style>

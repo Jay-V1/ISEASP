@@ -180,7 +180,7 @@ $filter_action = isset($_GET['action_type']) ? $_GET['action_type'] : '';
                                 <th>Action</th>
                                 <th>Applicant</th>
                                 <th>Details</th>
-                                <th>IP Address</th>
+                                <!-- <th>IP Address</th> -->
                              </thead>
                         <tbody>
                             <?php
@@ -251,7 +251,7 @@ $filter_action = isset($_GET['action_type']) ? $_GET['action_type'] : '';
                                     <?php endif; ?>
                                 </td>
                                 <td><?= htmlspecialchars($log->DETAILS ?? '') ?></td>
-                                <td><code><?= $log->IP_ADDRESS ?? 'N/A' ?></code></td>
+                                <!-- <td><code><?= $log->IP_ADDRESS ?? 'N/A' ?></code></td> -->
                              </tr>
                             <?php endforeach; ?>
                             

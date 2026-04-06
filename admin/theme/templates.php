@@ -271,10 +271,22 @@
                         </ul>
                     </li>
 
-                    
+                    <!-- Final Evaluation -->
+                    <li class="treeview <?php echo (strpos($_SERVER['REQUEST_URI'], 'evaluation') !== false) ? "active" : "";?>">
+                        <a href="#">
+                            <i class="fa fa-gavel"></i> <span>Final Evaluation</span>
+                            <span class="pull-right-container">
+                                <i class="fa fa-angle-left pull-right"></i>
+                            </span>
+                        </a>
+                        <ul class="treeview-menu">
+                            <li><a href="<?php echo web_root;?>admin/evaluation/"><i class="fa fa-circle-o"></i> For Evaluation</a></li>
+                            <!-- <li><a href="<?php echo web_root;?>admin/evaluation/index.php?view=qualified"><i class="fa fa-circle-o"></i> Qualified</a></li> -->
+                        </ul>
+                    </li>
 
                     <!-- Qualified Applicants -->
-                    <li class="treeview <?php echo (strpos($_SERVER['REQUEST_URI'], 'evaluation') !== false) ? "active" : "";?>">
+                    <!-- <li class="treeview <?php echo (strpos($_SERVER['REQUEST_URI'], 'evaluation') !== false) ? "active" : "";?>">
                         <a href="#">
                             <i class="fa fa-check-circle-o"></i> <span>Qualified</span>
                             <span class="pull-right-container">
@@ -284,7 +296,7 @@
                         <ul class="treeview-menu">
                             <li><a href="<?php echo web_root;?>admin/evaluation/index.php?view=qualified"><i class="fa fa-users"></i> Qualified Applicants</a></li>
                         </ul>
-                    </li>
+                    </li> -->
 
                     <!-- Scholars -->
                     <li class="treeview <?php echo (strpos($_SERVER['REQUEST_URI'], 'scholars') !== false) ? "active" : "";?>">
@@ -338,7 +350,8 @@
                             </span>
                         </a>
                         <ul class="treeview-menu">
-                            <li><a href="<?php echo web_root;?>admin/system/index.php?view=users"><i class="fa fa-users"></i> Manage Users</a></li>
+                            <!-- <li><a href="<?php echo web_root;?>admin/system/index.php?view=users"><i class="fa fa-users"></i> Manage Users</a></li> -->
+                             <li><a href="<?php echo web_root;?>admin/system/index.php?view=list"><i class="fa fa-users"></i> Manage Users</a></li>
                             <li><a href="<?php echo web_root;?>admin/system/index.php?view=settings"><i class="fa fa-wrench"></i> System Settings</a></li>
                             <li><a href="<?php echo web_root;?>admin/system/index.php?view=logs"><i class="fa fa-history"></i> Activity Logs</a></li>
                             <!-- <li><a href="<?php echo web_root;?>admin/system/index.php?view=backup"><i class="fa fa-database"></i> Database Backup</a></li> -->
@@ -389,89 +402,85 @@
         </footer>
     </div>
 
-    <!-- Scripts -->
     <script src="<?php echo web_root;?>plugins/jQuery/jQuery-2.1.4.min.js"></script>
     <script src="<?php echo web_root;?>bootstrap/js/bootstrap.min.js"></script>
     <script src="<?php echo web_root;?>dist/js/app.min.js"></script>
-    
-    <!-- DataTables -->
+
     <script src="<?php echo web_root;?>plugins/datatables/jquery.dataTables.min.js"></script>
     <script src="<?php echo web_root;?>plugins/datatables/dataTables.bootstrap.min.js"></script>
-    
-    <!-- Datepicker -->
+
     <script src="<?php echo web_root;?>plugins/datepicker/bootstrap-datepicker.js"></script>
-    
-    <!-- SlimScroll -->
     <script src="<?php echo web_root;?>plugins/slimScroll/jquery.slimscroll.min.js"></script>
-    
-    <!-- FastClick -->
     <script src="<?php echo web_root;?>plugins/fastclick/fastclick.min.js"></script>
-    
-    <!-- AdminLTE for demo purposes -->
     <script src="<?php echo web_root;?>dist/js/demo.js"></script>
 
     <script>
-        $(function () {
-            // Initialize DataTables
-            $('.datatable').DataTable({
-                "paging": true,
-                "lengthChange": true,
-                "searching": true,
-                "ordering": true,
-                "info": true,
-                "autoWidth": false,
-                "responsive": true
-            });
-
-            // Initialize datepicker
-            $('.datepicker').datepicker({
-                format: 'yyyy-mm-dd',
-                autoclose: true,
-                todayHighlight: true
-            });
-
-            // Sidebar treeview active state
-            $('.sidebar-menu li.treeview').each(function() {
-                if ($(this).hasClass('active')) {
-                    $(this).addClass('menu-open');
-                }
-            });
-
-            // Confirmation dialogs
-            $('.delete-confirm').on('click', function(e) {
-                e.preventDefault();
-                var link = $(this).attr('href');
-                bootbox.confirm("Are you sure you want to delete this item?", function(result) {
-                    if (result) {
-                        window.location.href = link;
-                    }
+    $(function () {
+        $('.datatable').each(function () {
+            if ($.fn.DataTable && !$.fn.DataTable.isDataTable(this)) {
+                $(this).DataTable({
+                    paging: true,
+                    lengthChange: true,
+                    searching: true,
+                    ordering: true,
+                    info: true,
+                    autoWidth: false,
+                    responsive: true
                 });
-            });
+            }
         });
 
-        // Notification toast
-        function showNotification(message, type = 'success') {
-            var icon = type == 'success' ? 'fa-check' : 'fa-warning';
-            var title = type == 'success' ? 'Success!' : 'Error!';
-            
-            $.notify({
-                icon: icon,
-                title: title,
-                message: message
-            },{
-                type: type,
-                allow_dismiss: true,
-                newest_on_top: true,
-                placement: {
-                    from: "top",
-                    align: "right"
-                },
-                animate: {
-                    enter: 'animated fadeInDown',
-                    exit: 'animated fadeOutUp'
-                }
-            });
+        $('.datepicker').datepicker({
+            format: 'yyyy-mm-dd',
+            autoclose: true,
+            todayHighlight: true
+        });
+
+        $('.sidebar-menu li.treeview').each(function () {
+            if ($(this).hasClass('active')) {
+                $(this).addClass('menu-open');
+            }
+        });
+
+        $('.delete-confirm').on('click', function(e) {
+            if (!confirm("Are you sure you want to delete this item?")) {
+                e.preventDefault();
+            }
+        });
+    });
+
+    function showNotification(message, type) {
+        type = type || 'success';
+
+        if (!$.notify) {
+            alert(message);
+            return;
         }
+
+        var icon = (type === 'success') ? 'fa-check' : 'fa-warning';
+        var title = (type === 'success') ? 'Success!' : 'Error!';
+
+        $.notify({
+            icon: icon,
+            title: title,
+            message: message
+        },{
+            type: type,
+            allow_dismiss: true,
+            newest_on_top: true,
+            placement: {
+                from: "top",
+                align: "right"
+            },
+            animate: {
+                enter: 'animated fadeInDown',
+                exit: 'animated fadeOutUp'
+            }
+        });
+    }
     </script>
+
+    <?php if (isset($page_script) && !empty($page_script)) { echo $page_script; } ?>
+
 </body>
 </html>

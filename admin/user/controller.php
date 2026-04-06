@@ -139,7 +139,7 @@ function doEdit(){
         // Handle file upload
         $pic_sql = "";
         if (isset($_FILES['PICLOCATION']) && $_FILES['PICLOCATION']['error'] == 0) {
-            $target_dir = "photos/";
+            $target_dir = "../../admin/user/photos/";
             
             if (!file_exists($target_dir)) {
                 mkdir($target_dir, 0777, true);

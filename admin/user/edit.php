@@ -115,9 +115,9 @@ $current_status = $status_result ? $status_result->STATUS : 'Active';
             <label class="col-md-4 control-label">Current Picture:</label>
             <div class="col-md-8">
                 <?php if(!empty($singleuser->PICLOCATION)): ?>
-                    <img src="<?php echo web_root.'admin/user/'. $singleuser->PICLOCATION; ?>" 
+                    <img src="<?php echo web_root.'admin/user/photos/'. $singleuser->PICLOCATION; ?>" 
                          style="max-width: 100px; max-height: 100px; border: 1px solid #ddd; padding: 5px;"
-                         onerror="this.src='<?php echo web_root;?>admin/user/default-profile.png'">
+                         onerror="this.src='<?php echo web_root;?>admin/user/photos/default-profile.png'">
                 <?php else: ?>
                     <p>No profile picture</p>
                 <?php endif; ?>
