@@ -1,0 +1,13 @@
+{
+    "name": "iseasp/scholarship-system",
+    "description": "Ilocos Sur Educational Assistance and Scholarship Program",
+    "type": "project",
+    "require": {
+        "php": ">=7.4"
+    },
+    "config": {
+        "platform": {
+            "php": "8.2"
+        }
+    }
+}

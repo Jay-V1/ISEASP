@@ -1,0 +1,26 @@
+# Enable rewrite engine
+RewriteEngine On
+
+# Set default charset
+AddDefaultCharset UTF-8
+
+# Prevent directory listing
+Options -Indexes
+
+# Protect sensitive directories
+RedirectMatch 403 ^/admin/.*/(controller|config|database)\.php$
+RedirectMatch 403 ^/include/.*\.php$
+
+# PHP settings
+php_value upload_max_filesize 10M
+php_value post_max_size 10M
+php_value max_execution_time 300
+php_value memory_limit 128M
+
+# Handle errors
+ErrorDocument 404 /ISEASP1/404.php
+ErrorDocument 500 /ISEASP1/500.php
+
+# Force HTTPS (uncomment for production)
+# RewriteCond %{HTTPS} off
+# RewriteRule ^(.*)$ https://%{HTTP_HOST}/$1 [R=301,L]

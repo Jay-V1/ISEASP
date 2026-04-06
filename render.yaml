@@ -1,0 +1,26 @@
+services:
+  - type: web
+    name: iseasp
+    runtime: php
+    buildCommand: |
+      # Install dependencies if needed
+      # Copy configuration files
+      cp include/config_render.php include/config.php
+    startCommand: "php -S 0.0.0.0:10000 -t ."
+    envVars:
+      - key: RENDER
+        value: true
+      - key: DATABASE_URL
+        fromDatabase:
+          name: iseasp-db
+          property: connectionString
+      - key: PHP_VERSION
+        value: 8.2
+    plan: free
+    healthCheckPath: /admin/
+
+databases:
+  - name: iseasp-db
+    plan: free
+    databaseName: iseasp_db
+    user: iseasp_user
