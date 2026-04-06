@@ -5,7 +5,6 @@ if (getenv('RENDER') !== false) {
     $database_url = getenv('DATABASE_URL');
     
     if ($database_url) {
-        // Parse database URL (for MySQL)
         $db_parts = parse_url($database_url);
         
         define('server', $db_parts['host']);
@@ -18,14 +17,12 @@ if (getenv('RENDER') !== false) {
             define('DB_PORT', $db_parts['port']);
         }
     } else {
-        // Fallback for Render without DATABASE_URL
         define('server', 'localhost');
         define('user', 'root');
         define('pass', '');
         define('database_name', 'iseasp_db');
     }
     
-    // Web root for Render
     $web_root = "https://" . $_SERVER['HTTP_HOST'] . "/";
     define('web_root', $web_root);
 } else {
@@ -35,12 +32,10 @@ if (getenv('RENDER') !== false) {
     define('pass', '');
     define('database_name', 'iseasp_db');
     
-    // Web root for local development
     $web_root = "http://" . $_SERVER['HTTP_HOST'] . "/ISEASP/";
     define('web_root', $web_root);
 }
 
-// Time zone
 date_default_timezone_set('Asia/Manila');
 
 // Error reporting
