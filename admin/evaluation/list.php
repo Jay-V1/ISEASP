@@ -80,11 +80,11 @@ global $mydb;
         <div class="panel panel-default" style="margin-top: 15px;">
             <div class="panel-heading">
                 <i class="fa fa-check-square"></i> Applicants Ready for Final Evaluation
-                <div class="pull-right">
+                <!-- <div class="pull-right">
                     <a href="#" onclick="window.print()" class="btn btn-default btn-xs">
                         <i class="fa fa-print"></i> Print
                     </a>
-                </div>
+                </div> -->
             </div>
             <div class="panel-body">
                 <div class="table-responsive">
@@ -117,8 +117,7 @@ global $mydb;
                                 LEFT JOIN tbl_interview i ON a.APPLICANTID = i.APPLICANTID
                                 WHERE a.EXAM_STATUS = 'Passed' 
                                 AND i.RECOMMENDATION = 'Pass'
-                                AND a.STATUS != 'Qualified'
-                                AND a.STATUS != 'Scholar'
+                                AND a.STATUS NOT IN ('Qualified', 'Scholar', 'Graduated', 'Rejected')
                                 ORDER BY a.LASTNAME ASC
                             ";
                             
@@ -174,11 +173,11 @@ global $mydb;
         <div class="panel panel-default" style="margin-top: 15px;">
             <div class="panel-heading">
                 <i class="fa fa-star"></i> Qualified Applicants
-                <div class="pull-right">
-                    <!-- <a href="index.php?view=qualified" class="btn btn-primary btn-xs">
+                <!-- <div class="pull-right">
+                    <a href="../evaluation/qualified.php" class="btn btn-primary btn-xs">
                         <i class="fa fa-eye"></i> View All Qualified
-                    </a> -->
-                </div>
+                    </a>
+                </div> -->
             </div>
             <div class="panel-body">
                 <div class="table-responsive">
@@ -189,7 +188,7 @@ global $mydb;
                                 <th>Municipality</th>
                                 <th>School</th>
                                 <th>Course</th>
-                                <!-- <th>Evaluation Date</th> -->
+                                <th>Evaluation Date</th>
                                 <th>Action</th>
                             </tr>
                         </thead>
@@ -213,10 +212,13 @@ global $mydb;
                                 <td><?= htmlspecialchars($q->MUNICIPALITY ?? 'N/A') ?></td>
                                 <td><?= htmlspecialchars($q->SCHOOL ?? 'N/A') ?></td>
                                 <td><?= htmlspecialchars($q->COURSE ?? 'N/A') ?></td>
-                                <!-- <td><?= $q->EVALUATION_DATE ? date('M d, Y', strtotime($q->EVALUATION_DATE)) : 'N/A' ?></td> -->
+                                <td><?= $q->EVALUATION_DATE ? date('M d, Y', strtotime($q->EVALUATION_DATE)) : 'N/A' ?></td>
                                 <td>
                                     <a href="../applications/index.php?view=convert&id=<?= $q->APPLICANTID ?>" class="btn btn-success btn-xs">
                                         <i class="fa fa-graduation-cap"></i> Convert
+                                    </a>
+                                    <a href="../applications/index.php?view=view&id=<?= $q->APPLICANTID ?>" class="btn btn-info btn-xs">
+                                        <i class="fa fa-eye"></i> View
                                     </a>
                                 </td>
                             </tr>
@@ -224,7 +226,7 @@ global $mydb;
                             
                             <?php if (empty($qualified_list)): ?>
                             <tr>
-                                <td colspan="6" class="text-center">No qualified applicants yet.</td>
+                                <td colspan="6" class="text-center">No qualified applicants yet.<?php echo "\n"; ?>
                             </tr>
                             <?php endif; ?>
                         </tbody>

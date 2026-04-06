@@ -138,21 +138,6 @@ $school_year = isset($_GET['school_year']) ? $_GET['school_year'] : '';
         <a href="index.php?view=add" class="btn btn-primary" style="background-color: #27ae60; border-color: #229954;">
             <i class="fa fa-plus"></i> New Applicant
         </a>
-        <a href="index.php?view=missing_requirements" class="btn btn-danger">
-            <i class="fa fa-exclamation-triangle"></i> Missing Requirements
-        </a>
-        <a href="index.php?view=for_exam" class="btn btn-warning">
-            <i class="fa fa-pencil"></i> For Examination
-        </a>
-        <a href="index.php?view=for_evaluation" class="btn btn-info">
-            <i class="fa fa-check-square"></i> For Evaluation
-        </a>
-        <a href="index.php?view=qualified" class="btn btn-success">
-            <i class="fa fa-star"></i> Qualified
-        </a>
-        <!-- <button onclick="printTable()" class="btn btn-default print-btn">
-            <i class="fa fa-print"></i> Print Table
-        </button> -->
     </div>
 </div>
 
@@ -177,8 +162,10 @@ $school_year = isset($_GET['school_year']) ? $_GET['school_year'] : '';
                 <?php
                 $where = array();
                 
-                if ($stage != 'scholar') {
-                    $where[] = "a.STATUS != 'Scholar'";
+                // CRITICAL FIX: Only show new applicants, exclude scholars and graduates
+                // By default, exclude scholars, graduates, and terminated
+                if ($stage != 'scholar' && $stage != 'qualified') {
+                    $where[] = "a.STATUS NOT IN ('Scholar', 'Graduated', 'Terminated')";
                 }
                 
                 if (!empty($school_year)) {
@@ -188,15 +175,19 @@ $school_year = isset($_GET['school_year']) ? $_GET['school_year'] : '';
                 switch($stage) {
                     case 'new':
                         $where[] = "(a.EXAM_SLIP_GENERATED IS NULL OR a.EXAM_SLIP_GENERATED = '') AND a.STATUS = 'Pending'";
+                        $where[] = "a.APPLICATION_TYPE = 'New Applicant'";
                         break;
                     case 'requirements':
                         $where[] = "a.REQUIREMENT_STATUS = 'Incomplete' OR a.REQUIREMENT_STATUS IS NULL";
+                        $where[] = "a.STATUS NOT IN ('Qualified', 'Scholar')";
                         break;
                     case 'exam_slip':
                         $where[] = "a.EXAM_SLIP_GENERATED IS NOT NULL AND a.EXAM_SLIP_GENERATED != '' AND a.EXAM_STATUS = 'Pending'";
+                        $where[] = "a.STATUS NOT IN ('Qualified', 'Scholar')";
                         break;
                     case 'exam':
                         $where[] = "a.EXAM_STATUS IN ('Passed', 'Failed')";
+                        $where[] = "a.STATUS NOT IN ('Qualified', 'Scholar')";
                         break;
                     case 'evaluation':
                         $where[] = "a.EXAM_STATUS = 'Passed' AND a.STATUS = 'Pending'";
@@ -219,7 +210,7 @@ $school_year = isset($_GET['school_year']) ? $_GET['school_year'] : '';
                     $where[] = "a.MUNICIPALITY = '$municipality'";
                 }
                 
-                $where_clause = !empty($where) ? "WHERE " . implode(" AND ", $where) : "";
+                $where_clause = !empty($where) ? "WHERE " . implode(" AND ", $where) : "WHERE a.STATUS NOT IN ('Scholar', 'Graduated', 'Terminated')";
                 
                 $mydb->setQuery("
                     SELECT 
@@ -265,8 +256,11 @@ $school_year = isset($_GET['school_year']) ? $_GET['school_year'] : '';
                     <?php 
                     $has_applicants = false;
                     foreach ($applicants as $a): 
-                        if ($stage != 'scholar' && $a->STATUS == 'Scholar') {
-                            continue;
+                        // Skip scholars, graduates, and terminated if not specifically selected
+                        if ($stage != 'scholar' && $stage != 'qualified') {
+                            if (in_array($a->STATUS, ['Scholar', 'Graduated', 'Terminated'])) {
+                                continue;
+                            }
                         }
                         $has_applicants = true;
                         
