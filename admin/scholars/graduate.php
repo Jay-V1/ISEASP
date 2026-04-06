@@ -5,17 +5,17 @@ if (!isset($_SESSION['ADMIN_USERID'])) {
 
 global $mydb;
 
-// Debug - Check what's in the database
-$mydb->setQuery("SELECT AWARD_ID, APPLICANTID, STATUS FROM tbl_scholarship_awards WHERE STATUS = 'Graduated'");
-$mydb->executeQuery();
-$debug_graduates = $mydb->loadResultList();
+// // Debug - Check what's in the database
+// $mydb->setQuery("SELECT AWARD_ID, APPLICANTID, STATUS FROM tbl_scholarship_awards WHERE STATUS = 'Graduated'");
+// $mydb->executeQuery();
+// $debug_graduates = $mydb->loadResultList();
 
-echo '<div class="alert alert-info">';
-echo '<strong>Debug Info:</strong> Found ' . count($debug_graduates) . ' graduated scholars in database.<br>';
-foreach($debug_graduates as $dg) {
-    echo 'Award ID: ' . $dg->AWARD_ID . ', Applicant ID: ' . $dg->APPLICANTID . ', Status: ' . $dg->STATUS . '<br>';
-}
-echo '</div>';
+// echo '<div class="alert alert-info">';
+// echo '<strong>Debug Info:</strong> Found ' . count($debug_graduates) . ' graduated scholars in database.<br>';
+// foreach($debug_graduates as $dg) {
+//     echo 'Award ID: ' . $dg->AWARD_ID . ', Applicant ID: ' . $dg->APPLICANTID . ', Status: ' . $dg->STATUS . '<br>';
+// }
+// echo '</div>';
 ?>
 
 <div class="row">

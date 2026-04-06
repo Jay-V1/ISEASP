@@ -278,7 +278,7 @@ $history = $mydb->loadResultList();
                         <tr>
                             <td><?= $r->SCHOOL_YEAR ?></td>
                             <td><?= $r->SEMESTER ?></td>
-                            <td><?= $r->PREVIOUS_GPA ?>%</span></td>
+                            <td><?= $r->PREVIOUS_GPA ?>%</td>
                             <td>
                                 <?php
                                 $renewal_status = match($r->STATUS) {
@@ -338,7 +338,7 @@ $history = $mydb->loadResultList();
                                 ?>
                                 <span class="label <?= $hist_status ?>"><?= $h->STATUS ?></span>
                             </td>
-                            <td><?= $h->GPA ?>%</span></td>
+                            <td><?= $h->GPA ?>%</td>
                             <td><?= htmlspecialchars($h->REMARKS ?? '') ?></td>
                             <td><?= htmlspecialchars($h->UPDATED_BY_NAME ?? 'N/A') ?></td>
                         </tr>
@@ -366,6 +366,7 @@ $history = $mydb->loadResultList();
                     <div class="form-group">
                         <label>Final GPA (%)</label>
                         <input type="number" name="final_gpa" class="form-control" required step="0.01" min="0" max="100" value="<?= $scholar->GPA ?>">
+                        <small class="help-block">Enter the scholar's final GPA percentage</small>
                     </div>
                     <div class="form-group">
                         <label>Honors (if any)</label>
@@ -394,96 +395,102 @@ $history = $mydb->loadResultList();
     </div>
 </div>
 
-<script src="<?php echo web_root;?>plugins/jQuery/jQuery-2.1.4.min.js"></script>
 <script>
-// Make sure jQuery is loaded before running the script
-if (typeof jQuery === 'undefined') {
-    console.error('jQuery is not loaded!');
-} else {
-    console.log('jQuery is loaded, version: ' + jQuery.fn.jquery);
+// Graduation form submission - using pure JavaScript to avoid jQuery conflicts
+(function() {
+    // Flag to prevent multiple event bindings
+    if (window.graduationHandlerBound) return;
+    window.graduationHandlerBound = true;
     
-    // Graduation form submission
-    jQuery('#graduateForm').on('submit', function(e) {
-        e.preventDefault();
+    // Function to submit graduation
+    function submitGraduation(form) {
+        var formData = new FormData(form);
+        formData.append('id', '<?= $scholar->AWARD_ID ?>');
         
-        var formData = jQuery(this).serialize();
-        formData += '&id=<?= $scholar->AWARD_ID ?>';
-        
-        console.log('Submitting graduation for award ID: <?= $scholar->AWARD_ID ?>');
-        console.log('Form data: ' + formData);
+        // Convert FormData to URL encoded string
+        var params = new URLSearchParams(formData).toString();
         
         if (confirm('Are you sure you want to mark this scholar as graduated? This action cannot be undone.')) {
-            jQuery.ajax({
-                url: 'controller.php?action=graduate',
-                type: 'POST',
-                data: formData,
-                dataType: 'json',
-                success: function(response) {
-                    console.log('Response:', response);
-                    if (response.status == 'success') {
-                        alert(response.message);
-                        location.reload();
-                    } else {
-                        alert('Error: ' + response.message);
+            var xhr = new XMLHttpRequest();
+            xhr.open('POST', 'controller.php?action=graduate', true);
+            xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+            xhr.onload = function() {
+                if (xhr.status === 200) {
+                    try {
+                        var response = JSON.parse(xhr.responseText);
+                        if (response.status === 'success') {
+                            alert(response.message);
+                            location.reload();
+                        } else {
+                            alert('Error: ' + response.message);
+                        }
+                    } catch(e) {
+                        console.error('Parse error:', e);
+                        alert('An error occurred. Please try again.');
                     }
-                },
-                error: function(xhr, status, error) {
-                    console.error('AJAX Error:', error);
-                    console.error('Response Text:', xhr.responseText);
-                    alert('An error occurred. Please try again. Check console for details.');
+                } else {
+                    alert('An error occurred. Please try again.');
                 }
-            });
+            };
+            xhr.onerror = function() {
+                alert('Network error. Please try again.');
+            };
+            xhr.send(params);
         }
-    });
-}
+        return false;
+    }
+    
+    // Attach event listener when DOM is ready
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function() {
+            var form = document.getElementById('graduateForm');
+            if (form && !form.hasAttribute('data-listener-attached')) {
+                form.setAttribute('data-listener-attached', 'true');
+                form.onsubmit = function(e) {
+                    e.preventDefault();
+                    return submitGraduation(this);
+                };
+            }
+        });
+    } else {
+        var form = document.getElementById('graduateForm');
+        if (form && !form.hasAttribute('data-listener-attached')) {
+            form.setAttribute('data-listener-attached', 'true');
+            form.onsubmit = function(e) {
+                e.preventDefault();
+                return submitGraduation(this);
+            };
+        }
+    }
+})();
 
 // Termination function
 function confirmTerminate(awardId) {
     if (confirm('Are you sure you want to terminate this scholarship? This action cannot be undone.')) {
         var reason = prompt('Please enter reason for termination:');
         if (reason) {
-            jQuery.post('controller.php?action=terminate', {
-                id: awardId,
-                reason: reason
-            }, function(response) {
-                if (response.status == 'success') {
-                    alert('Scholarship terminated successfully.');
-                    location.reload();
+            var xhr = new XMLHttpRequest();
+            xhr.open('POST', 'controller.php?action=terminate', true);
+            xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+            xhr.onload = function() {
+                if (xhr.status === 200) {
+                    try {
+                        var response = JSON.parse(xhr.responseText);
+                        if (response.status === 'success') {
+                            alert('Scholarship terminated successfully.');
+                            location.reload();
+                        } else {
+                            alert('Error terminating scholarship.');
+                        }
+                    } catch(e) {
+                        alert('Error terminating scholarship.');
+                    }
                 } else {
                     alert('Error terminating scholarship.');
                 }
-            }, 'json');
+            };
+            xhr.send('id=' + awardId + '&reason=' + encodeURIComponent(reason));
         }
     }
 }
-
-
-// Graduation form submission
-$('#graduateForm').on('submit', function(e) {
-    e.preventDefault();
-
-    var formData = $(this).serialize();
-    formData += '&id=<?= $scholar->AWARD_ID ?>';
-
-    if (confirm('Are you sure you want to mark this scholar as graduated? This action cannot be undone.')) {
-        $.ajax({
-            url: 'controller.php?action=graduate',
-            type: 'POST',
-            data: formData,
-            dataType: 'json',
-            success: function(response) {
-                if (response.status == 'success') {
-                    alert(response.message);
-                    window.location.href = 'index.php?view=graduates';
-                } else {
-                    alert('Error: ' + response.message);
-                }
-            },
-            error: function(xhr, status, error) {
-                console.log(xhr.responseText);
-                alert('An error occurred. Please try again.');
-            }
-        });
-    }
-});
 </script>
